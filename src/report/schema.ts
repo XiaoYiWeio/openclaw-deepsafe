@@ -7,6 +7,7 @@ export type Finding = {
   category: FindingCategory;
   severity: Severity;
   title: string;
+  source?: string;
   evidence: string;
   remediation: string;
 };

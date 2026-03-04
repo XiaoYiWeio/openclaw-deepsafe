@@ -46,6 +46,7 @@ export function runPostureScan(openclawConfigPath: string): ModuleResult {
       category: "posture",
       severity: "CRITICAL",
       title: "Gateway authentication is not configured",
+      source: resolved,
       evidence: `gateway.auth.mode is empty or missing.\nActual config: ${JSON.stringify(gateway.auth ?? {}, null, 2)}`,
       remediation:
         'Set gateway.auth.mode to "token" and provide a strong random token (>=32 chars). Example:\n' +
@@ -57,6 +58,7 @@ export function runPostureScan(openclawConfigPath: string): ModuleResult {
       category: "posture",
       severity: "HIGH",
       title: "Gateway auth token is too short",
+      source: resolved,
       evidence: `gateway.auth.mode = "token", token length = ${token.length} chars (minimum recommended: 32).\nToken preview: ${token.slice(0, 6)}${"*".repeat(Math.max(0, token.length - 6))}`,
       remediation:
         "Generate a strong random token (>=32 chars): `openssl rand -hex 32`, then update gateway.auth.token.",
@@ -70,6 +72,7 @@ export function runPostureScan(openclawConfigPath: string): ModuleResult {
       category: "posture",
       severity: "HIGH",
       title: "Gateway is exposed beyond localhost",
+      source: resolved,
       evidence: `gateway.mode = "${mode}" — this means the gateway may accept connections from external networks.\nFull gateway config:\n${JSON.stringify(gateway, null, 2)}`,
       remediation:
         'Set gateway.mode to "local" unless you specifically need remote access. If remote access is required, ensure a reverse proxy with TLS and auth is in front.',
@@ -84,6 +87,7 @@ export function runPostureScan(openclawConfigPath: string): ModuleResult {
         category: "posture",
         severity: "MEDIUM",
         title: "Gateway listens on a privileged port",
+        source: resolved,
         evidence: `gateway.port = ${portNum} — ports below 1024 require root/admin privileges and may conflict with system services.`,
         remediation: "Use a high port (e.g. 18789) and proxy through Nginx/Caddy if port 80/443 is needed.",
       });
@@ -103,7 +107,8 @@ export function runPostureScan(openclawConfigPath: string): ModuleResult {
         category: "posture",
         severity: "MEDIUM",
         title: `API key for provider "${providerName}" is hardcoded in config`,
-        evidence: `models.providers.${providerName}.apiKey = "${maskedKey}" (${key.length} chars)\nStored in: ${resolved}`,
+        source: resolved,
+        evidence: `models.providers.${providerName}.apiKey = "${maskedKey}" (${key.length} chars)`,
         remediation:
           "Move the key to an environment variable (e.g. OPENCLAW_PROVIDER_KEY) and reference it in config, then rotate the exposed key.",
       });
@@ -115,6 +120,7 @@ export function runPostureScan(openclawConfigPath: string): ModuleResult {
         category: "posture",
         severity: "HIGH",
         title: `Provider "${providerName}" uses unencrypted HTTP`,
+        source: resolved,
         evidence: `models.providers.${providerName}.baseUrl = "${baseUrl}"\nAPI keys and model traffic are transmitted in plaintext over the network.`,
         remediation: "Switch to HTTPS endpoint, or tunnel through SSH/VPN if the endpoint does not support TLS.",
       });
@@ -136,6 +142,7 @@ export function runPostureScan(openclawConfigPath: string): ModuleResult {
         category: "posture",
         severity: "LOW",
         title: "Enabled plugins have no explicit permission restrictions",
+        source: resolved,
         evidence: `${enabledPlugins.length} plugin(s) enabled: ${enabledPlugins.map(([k]) => k).join(", ")}\nNone define permissions, allowList, or denyList.`,
         remediation:
           "Consider adding per-plugin permission constraints to limit the blast radius of a compromised plugin.",
@@ -155,6 +162,7 @@ export function runPostureScan(openclawConfigPath: string): ModuleResult {
       category: "posture",
       severity: "LOW",
       title: "High agent/subagent concurrency limit",
+      source: resolved,
       evidence: `agents.defaults.maxConcurrent = ${maxConcurrent ?? "default"}, subagents.maxConcurrent = ${subagentMax ?? "default"}\nHigh concurrency can amplify the impact of a single compromised agent.`,
       remediation: "Consider reducing maxConcurrent to <=8 unless you have specific throughput requirements.",
     });

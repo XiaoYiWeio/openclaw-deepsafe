@@ -107,8 +107,8 @@ export function runMemoryScan(workspacePath: string): ModuleResult {
           category: "memory",
           severity: "HIGH",
           title: `Plaintext secret found: ${pattern.label}`,
+          source: filePath,
           evidence:
-            `File: ${relPath}\n` +
             (ctx ? `Line ${ctx.line}: ${ctx.snippet}\n` : "") +
             `Pattern: ${pattern.label}`,
           remediation:
@@ -132,8 +132,8 @@ export function runMemoryScan(workspacePath: string): ModuleResult {
         category: "memory",
         severity: "MEDIUM",
         title: `Personally identifiable information (PII) in session data`,
+        source: filePath,
         evidence:
-          `File: ${relPath}\n` +
           `Detected PII types: ${piiFound.join(", ")}\n` +
           `PII stored in session history may violate data protection regulations and increases breach impact.`,
         remediation:
@@ -150,8 +150,8 @@ export function runMemoryScan(workspacePath: string): ModuleResult {
         category: "memory",
         severity: "HIGH",
         title: "Persistent prompt injection trace in session history",
+        source: filePath,
         evidence:
-          `File: ${relPath}\n` +
           (ctx ? `Line ${ctx.line}: "${ctx.snippet}"\n` : "") +
           `This pattern could cause the model to follow hidden instructions when this session is resumed or used as context.`,
         remediation:

@@ -89,8 +89,8 @@ function analyzeAllowedTools(content: string, filePath: string): Finding[] {
       category: "skill",
       severity: "HIGH",
       title: `Skill "${skillName}" grants broad shell execution permissions`,
+      source: filePath,
       evidence:
-        `File: ${filePath}\n` +
         `allowed-tools declaration: ${toolsRaw}\n` +
         `High-risk entries: ${wildcardTools.join(", ")}\n` +
         `These allow the skill to execute arbitrary commands via shell.`,
@@ -108,8 +108,8 @@ function analyzeAllowedTools(content: string, filePath: string): Finding[] {
       category: "skill",
       severity: "MEDIUM",
       title: `Skill "${skillName}" has both file-write and network access`,
+      source: filePath,
       evidence:
-        `File: ${filePath}\n` +
         `allowed-tools: ${toolsRaw}\n` +
         `This combination could allow reading sensitive local files and exfiltrating them over the network.`,
       remediation: "Separate file and network permissions into distinct skills, or add explicit path/domain restrictions.",
@@ -162,8 +162,8 @@ export function runSkillScan(workspacePath: string): ModuleResult {
         category: "skill",
         severity: "HIGH",
         title: "Hidden Unicode control characters detected",
+        source: filePath,
         evidence:
-          `File: ${relPath}\n` +
           (ctx
             ? `Line ${ctx.line}: ${ctx.snippet}\n`
             : "") +
@@ -180,8 +180,8 @@ export function runSkillScan(workspacePath: string): ModuleResult {
         category: "skill",
         severity: "HIGH",
         title: "Prompt injection pattern found in skill content",
+        source: filePath,
         evidence:
-          `File: ${relPath}\n` +
           (ctx
             ? `Line ${ctx.line}: "${ctx.snippet}"\n`
             : "") +
@@ -199,8 +199,8 @@ export function runSkillScan(workspacePath: string): ModuleResult {
         category: "skill",
         severity: "MEDIUM",
         title: "Dangerous execution primitive in skill file",
+        source: filePath,
         evidence:
-          `File: ${relPath}\n` +
           `Matched patterns:\n${matchLines}\n` +
           `These functions can execute arbitrary system commands.`,
         remediation:
@@ -234,8 +234,8 @@ export function runSkillScan(workspacePath: string): ModuleResult {
         category: "skill",
         severity: "LOW",
         title: `Skill "${skillName}" has no _meta.json (unverified source)`,
+        source: skillRoot,
         evidence:
-          `Directory: ${skillRoot}\n` +
           `No _meta.json found — this skill was not installed from the official registry and cannot be verified.`,
         remediation:
           "Install skills from the official OpenClaw registry when possible. " +

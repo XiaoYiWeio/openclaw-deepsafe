@@ -272,6 +272,9 @@ export function toHtml(report: ScanReport): string {
       const sevBg = SEVERITY_BG[f.severity] ?? "rgba(255,255,255,0.03)";
       const evidence = escHtml(f.evidence).replace(/\n/g, "<br>");
       const remediation = escHtml(f.remediation).replace(/\n/g, "<br>");
+      const sourceHtml = f.source
+        ? `<div class="finding-source"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg><span>${escHtml(f.source)}</span></div>`
+        : "";
 
       findingsHtml += `<div class="finding-card" style="border-left-color:${sevColor}">
         <div class="finding-top">
@@ -279,6 +282,7 @@ export function toHtml(report: ScanReport): string {
           <span class="finding-title">${escHtml(f.title)}</span>
           <span class="finding-id">${escHtml(f.id)}</span>
         </div>
+        ${sourceHtml}
         <details class="finding-details">
           <summary class="finding-summary">View Evidence &amp; Remediation</summary>
           <div class="finding-body">
@@ -307,7 +311,7 @@ export function toHtml(report: ScanReport): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DeepSafe Security Report</title>
+<title>openclaw-deepsafe Security Report</title>
 <style>
 :root {
   --bg-primary: #0a0e1a;
@@ -394,6 +398,31 @@ body {
   filter: drop-shadow(0 0 30px rgba(59,130,246,0.3));
 }
 
+.hero-title {
+  position: relative;
+  z-index: 1;
+  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+  text-shadow: 0 0 30px rgba(59,130,246,0.4);
+}
+
+.hero-powered {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.hero-powered .ds-logo-svg { width: 100px; height: auto; }
+
 .hero-logo {
   position: relative;
   z-index: 1;
@@ -420,6 +449,12 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: 20px;
   font-size: 12px;
+}
+
+.mode-badge {
+  color: #e2e8f0;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .hero-gauge-wrap {
@@ -756,6 +791,21 @@ body {
   flex-wrap: wrap;
 }
 
+.finding-source {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px 8px;
+  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  font-size: 11.5px;
+  color: #94a3b8;
+  word-break: break-all;
+}
+.finding-source svg {
+  flex-shrink: 0;
+  color: #64748b;
+}
+
 .sev-badge {
   display: inline-flex;
   align-items: center;
@@ -883,6 +933,15 @@ details[open] > .finding-summary::before {
   border-top: 1px solid var(--border-subtle);
 }
 
+.footer-brand {
+  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
+}
+
 .footer-logo {
   display: flex;
   justify-content: center;
@@ -934,19 +993,21 @@ details[open] > .finding-summary::before {
   align-items: center;
   gap: 8px;
   padding: 10px 24px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border-medium);
-  color: var(--text-primary);
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.35);
+  color: #34d399;
   border-radius: 10px;
   font-weight: 600;
   font-size: 14px;
   text-decoration: none;
-  cursor: default;
-  transition: background 0.15s;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
 }
 
 .btn-share:hover {
-  background: rgba(255,255,255,0.08);
+  background: rgba(16,185,129,0.18);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(16,185,129,0.25);
 }
 
 .footer-meta {
@@ -1001,9 +1062,10 @@ details[open] > .finding-summary::before {
   <!-- Hero -->
   <div class="hero">
     ${mascotSrc ? `<div class="hero-mascot"><img src="${mascotSrc}" alt="openclaw-deepsafe"></div>` : ""}
-    <div class="hero-logo">${DEEPSAFE_LOGO}</div>
+    <h1 class="hero-title">openclaw-deepsafe</h1>
+    <div class="hero-powered">Powered by ${DEEPSAFE_LOGO}</div>
     <div class="hero-subtitle">
-      <span>Preflight Security Scan &middot; ${escHtml(report.metadata.profile.toUpperCase())} mode &middot; ${escHtml(formatDate(report.metadata.generatedAt))}</span>
+      <span>Preflight Security Scan &middot; <strong class="mode-badge">${escHtml(report.metadata.profile.toUpperCase())}</strong> mode &middot; ${escHtml(formatDate(report.metadata.generatedAt))}</span>
     </div>
     <div class="hero-gauge-wrap">${totalGauge}</div>
   </div>
@@ -1070,20 +1132,20 @@ details[open] > .finding-summary::before {
   <!-- Footer -->
   <div class="footer">
     ${mascotSrc ? `<div class="hero-mascot" style="margin-bottom:12px"><img src="${mascotSrc}" alt="openclaw-deepsafe" style="height:80px"></div>` : ""}
-    <div class="footer-logo">${DEEPSAFE_LOGO}</div>
-    <div class="footer-tagline">AI Safety Evaluation Framework</div>
+    <div class="footer-brand">openclaw-deepsafe</div>
+    <div class="footer-tagline">Preflight Security Scanner for OpenClaw &middot; Powered by <a href="https://github.com/AI45Lab/DeepSafe" target="_blank" rel="noopener noreferrer" style="color:var(--accent-blue);text-decoration:none">DeepSafe</a></div>
     <div class="footer-actions">
-      <a class="btn-star" href="https://github.com/AI45Lab/DeepSafe" target="_blank" rel="noopener noreferrer">
+      <a class="btn-star" href="https://github.com/AI45Lab/openclaw-deepsafe" target="_blank" rel="noopener noreferrer">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         Star on GitHub
       </a>
-      <span class="btn-share">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-        Share this report
-      </span>
+      <a class="btn-share" href="https://github.com/AI45Lab/DeepSafe" target="_blank" rel="noopener noreferrer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a8 8 0 0 0-8 8c0 3.4 2.1 6.3 5 7.4V20h6v-2.6c2.9-1.1 5-4 5-7.4a8 8 0 0 0-8-8z"/><line x1="10" y1="22" x2="14" y2="22"/></svg>
+        Powered by DeepSafe
+      </a>
     </div>
     <div class="footer-meta">
-      Generated by <a href="https://github.com/AI45Lab/DeepSafe">openclaw-deepsafe</a> v${escHtml(report.metadata.pluginVersion)}<br>
+      Generated by <a href="https://github.com/AI45Lab/openclaw-deepsafe">openclaw-deepsafe</a> v${escHtml(report.metadata.pluginVersion)}<br>
       ${escHtml(formatDate(report.metadata.generatedAt))} &middot; Fingerprint: ${escHtml(report.metadata.fingerprint.slice(0, 12))}&hellip; &middot; Cache TTL: ${report.metadata.ttlDays}d
     </div>
   </div>
