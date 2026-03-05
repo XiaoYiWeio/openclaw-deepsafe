@@ -523,6 +523,54 @@ section { padding: 100px 0; }
   color: var(--text-dim);
 }
 
+/* ── Numbers grid ── */
+.numbers-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.number-card {
+  padding: 36px;
+  border-radius: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+
+.number-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-4px);
+}
+
+.number-value {
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+
+.number-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: 12px;
+}
+
+.number-detail {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
 /* ── Terminal mockup ── */
 .terminal-section { padding: 100px 0; }
 
@@ -683,7 +731,7 @@ footer {
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .steps, .features { grid-template-columns: 1fr; }
+  .steps, .features, .numbers-grid { grid-template-columns: 1fr; }
   .dims { grid-template-columns: 1fr; }
   .hero { padding: 140px 0 80px; }
   section { padding: 72px 0; }
@@ -711,7 +759,8 @@ footer {
     </a>
     <div class="nav-links">
       <a href="#how-it-works">How It Works</a>
-      <a href="#dimensions">Scan Dimensions</a>
+      <a href="#dimensions">Dimensions</a>
+      <a href="#numbers">Coverage</a>
       <a href="#features">Features</a>
       <a href="https://github.com/XiaoYiWeio/openclaw-deepsafe" target="_blank" rel="noopener" class="nav-cta">
         <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
@@ -866,6 +915,50 @@ footer {
           <span class="dim-tag">Email Ops Detection</span>
           <span class="dim-tag">LLM Behavior Analysis</span>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Numbers ── -->
+<section id="numbers">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Detection Coverage</div>
+      <h2 class="section-title">What we actually detect.</h2>
+      <p class="section-desc">Not marketing fluff — these are real regex patterns, benchmarks, and LLM prompts running on your machine.</p>
+    </div>
+
+    <div class="numbers-grid">
+      <div class="number-card reveal reveal-delay-1">
+        <div class="number-value">28+</div>
+        <div class="number-label">Secret Patterns</div>
+        <p class="number-detail">OpenAI, Anthropic, HuggingFace, GitHub (PAT/OAuth/App), GitLab, Slack (bot/user/webhook), AWS, Google Cloud, Azure, Stripe, SendGrid, Twilio, PEM/SSH keys, Database URLs, JWT, HTTP Basic Auth</p>
+      </div>
+      <div class="number-card reveal reveal-delay-2">
+        <div class="number-value">15+</div>
+        <div class="number-label">Skill &amp; MCP Analyzers</div>
+        <p class="number-detail">Hidden Unicode, prompt injection, base64/hex payloads, embedded secrets, system prompt extraction, argument injection, data exfiltration chains, destructive actions, auto-execute bypass, email/messaging tools</p>
+      </div>
+      <div class="number-card reveal reveal-delay-3">
+        <div class="number-value">9</div>
+        <div class="number-label">PII Detectors</div>
+        <p class="number-detail">Email, phone, SSN, credit card (Luhn), IBAN, passport number, IP address, and more</p>
+      </div>
+      <div class="number-card reveal reveal-delay-1">
+        <div class="number-value">4</div>
+        <div class="number-label">Model Safety Benchmarks</div>
+        <p class="number-detail">Persuasion manipulation, capability concealment (sandbagging), deception tendency (DTR), hallucination detection (HaluEval)</p>
+      </div>
+      <div class="number-card reveal reveal-delay-2">
+        <div class="number-value">3</div>
+        <div class="number-label">LLM Semantic Modules</div>
+        <p class="number-detail">Posture analysis (5 risk categories), skill audit (6 risk categories), memory behavior chain analysis (5 risk categories)</p>
+      </div>
+      <div class="number-card reveal reveal-delay-3">
+        <div class="number-value">&check;</div>
+        <div class="number-label">Per-Finding Warnings</div>
+        <p class="number-detail">Every finding includes a plain-language warning explaining the real-world risk, generated dynamically by LLM or hardcoded for known patterns</p>
       </div>
     </div>
   </div>
