@@ -190,9 +190,9 @@ function toMarkdown(report: ScanReport): string {
   // ── Footer ──────────────────────────────────────────────────────────────────
   lines.push("---");
   lines.push("");
-  lines.push("_Powered by [DeepSafe](https://github.com/AI45Lab/DeepSafe) — AI safety evaluation framework_");
+  lines.push("_Powered by [DeepSafe](https://github.com/XiaoYiWeio/DeepSafe) — AI safety evaluation framework_");
   lines.push("");
-  lines.push(`> ⭐ If this report helped you, consider giving us a star on [GitHub](https://github.com/AI45Lab/DeepSafe)!`);
+  lines.push(`> ⭐ If this report helped you, consider giving us a star on [GitHub](https://github.com/XiaoYiWeio/DeepSafe)!`);
   lines.push("");
   return lines.join("\n");
 }

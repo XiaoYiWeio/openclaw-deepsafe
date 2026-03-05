@@ -3,7 +3,7 @@
   <h1>openclaw-deepsafe</h1>
   <p><strong>Preflight Security Scanner for OpenClaw</strong></p>
   <p>One-command scan for deployment, skills, model safety, and memory risks — all locally.</p>
-  <a href="https://github.com/AI45Lab/DeepSafe"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-DeepSafe-blue?logo=github"></a>
+  <a href="https://github.com/XiaoYiWeio/DeepSafe"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-DeepSafe-blue?logo=github"></a>
 </div>
 
 ---
@@ -24,7 +24,7 @@ Results are cached for several days so you only scan when things change.
 ## Install
 
 ```bash
-openclaw plugins install github:AI45Lab/openclaw-deepsafe
+openclaw plugins install github:XiaoYiWeio/openclaw-deepsafe
 ```
 
 Then restart OpenClaw Gateway.
@@ -92,8 +92,8 @@ openclaw deepsafe scan --debug --force
 
 ## Powered by
 
-<a href="https://github.com/AI45Lab/DeepSafe">
+<a href="https://github.com/XiaoYiWeio/DeepSafe">
   <img src="assets/deepsafe-logo-dark.svg" alt="DeepSafe" width="160">
 </a>
 
-Part of the [DeepSafe](https://github.com/AI45Lab/DeepSafe) AI Safety Evaluation Framework.
+Part of the [DeepSafe](https://github.com/XiaoYiWeio/DeepSafe) AI Safety Evaluation Framework.
