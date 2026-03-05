@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>openclaw-deepsafe — Preflight Security Scanner for OpenClaw</title>
+<link rel="icon" type="image/png" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -740,7 +741,7 @@ footer {
 
     <h1 class="reveal reveal-delay-2">Know your risks<br>before you code.</h1>
 
-    <p class="reveal reveal-delay-2">One-command preflight security scan for OpenClaw. Checks deployment, skills, model safety, and memory &mdash; all locally.</p>
+    <p class="reveal reveal-delay-2">Preflight security scanner for OpenClaw: 28+ secret patterns, 15+ skill analyzers, 4 model safety benchmarks, and LLM-enhanced semantic analysis &mdash; one command, fully local.</p>
 
     <div class="hero-buttons reveal reveal-delay-3">
       <button class="btn btn-primary" id="install-btn" onclick="copyInstall()">
@@ -810,13 +811,15 @@ footer {
         <div class="dim-icon dim-icon--deploy">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
         </div>
-        <h3>Deployment Config</h3>
-        <p>Examines your gateway exposure, authentication settings, TLS configuration, and exposed ports for misconfigurations.</p>
+        <h3>Deployment Config &amp; Posture</h3>
+        <p>10+ rule checks plus LLM-powered config analysis: gateway exposure, auth, TLS, MCP server supply chain, sandbox settings, logging, and provider trust.</p>
         <div class="dim-tags">
           <span class="dim-tag">Gateway Exposure</span>
-          <span class="dim-tag">Auth Checks</span>
-          <span class="dim-tag">TLS Verification</span>
-          <span class="dim-tag">Port Scanning</span>
+          <span class="dim-tag">Auth &amp; TLS</span>
+          <span class="dim-tag">MCP Supply Chain</span>
+          <span class="dim-tag">Sandbox Check</span>
+          <span class="dim-tag">Audit Logging</span>
+          <span class="dim-tag">LLM Analysis</span>
         </div>
       </div>
 
@@ -825,11 +828,14 @@ footer {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         </div>
         <h3>Skill / MCP Analysis</h3>
-        <p>Scans registered skills and MCP servers for prompt injection vectors, dangerous runtimes, and overly broad permissions.</p>
+        <p>15+ static analyzers plus LLM semantic audit: prompt injection, hidden chars, encoded payloads, embedded secrets, data exfiltration chains, destructive actions, and auto-execute detection.</p>
         <div class="dim-tags">
           <span class="dim-tag">Prompt Injection</span>
-          <span class="dim-tag">Dangerous Runtimes</span>
-          <span class="dim-tag">Permission Analysis</span>
+          <span class="dim-tag">Encoded Payloads</span>
+          <span class="dim-tag">Embedded Secrets</span>
+          <span class="dim-tag">Data Exfiltration</span>
+          <span class="dim-tag">Destructive Ops</span>
+          <span class="dim-tag">LLM Semantic Audit</span>
         </div>
       </div>
 
@@ -852,11 +858,13 @@ footer {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         </div>
         <h3>Memory &amp; History</h3>
-        <p>Inspects conversation history and memory stores for leaked secrets, PII exposure, and injection persistence patterns.</p>
+        <p>28+ secret patterns, 9 PII detectors, injection persistence scanner, plus LLM behavior chain analysis for email ops, destructive actions, and privilege escalation traces.</p>
         <div class="dim-tags">
-          <span class="dim-tag">Secret Leaks</span>
-          <span class="dim-tag">PII Detection</span>
+          <span class="dim-tag">28+ Secret Patterns</span>
+          <span class="dim-tag">PII / Credit Cards</span>
           <span class="dim-tag">Injection Persistence</span>
+          <span class="dim-tag">Email Ops Detection</span>
+          <span class="dim-tag">LLM Behavior Analysis</span>
         </div>
       </div>
     </div>
@@ -955,8 +963,8 @@ footer {
         <span class="feature-icon">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         </span>
-        <h3>Python 3 Only</h3>
-        <p>No Docker, no Node, no extra dependencies. If you have Python 3, you're good to go.</p>
+        <h3>LLM-Enhanced Detection</h3>
+        <p>Beyond regex rules — uses your configured model for deep semantic analysis of configs, skills, and behavior patterns.</p>
       </div>
       <div class="feature reveal reveal-delay-3">
         <span class="feature-icon">

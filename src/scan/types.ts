@@ -4,6 +4,8 @@ const fs = require("fs");
 
 import { Finding, FindingCategory, ModuleStatus } from "../report/schema";
 
+export type { LlmConfig } from "./llm";
+
 export type ModuleResult = {
   name: FindingCategory;
   status: ModuleStatus;

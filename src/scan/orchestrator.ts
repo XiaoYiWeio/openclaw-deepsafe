@@ -8,6 +8,7 @@ const os = require("os");
 import { computeFingerprint, saveLatest, tryLoadValidCachedReport } from "../cache/cache";
 import { clampScore, ScanReport } from "../report/schema";
 import { writeReport, ReportPaths } from "../report/writer";
+import { LlmConfig } from "./llm";
 import { runMemoryScan } from "./modules/memory";
 import { runModelScan } from "./modules/model";
 import { runPostureScan } from "./modules/posture";
@@ -156,8 +157,17 @@ export function runScan(options: ScanOptions): ScanRunResult {
     if (options.debug) console.error(`deepsafe debug: ${msg}`);
   };
 
+  const llmConfig: LlmConfig | null =
+    options.runModel && options.apiBase && options.model
+      ? { apiBase: options.apiBase, model: options.model, apiKey: options.apiKey }
+      : null;
+
+  if (llmConfig) {
+    log("LLM-enhanced scanning enabled for posture/skill/memory");
+  }
+
   log("[1/4] posture scan ...");
-  const postureRun = moduleTiming(() => runPostureScan(options.openclawConfigPath));
+  const postureRun = moduleTiming(() => runPostureScan(options.openclawConfigPath, llmConfig, log));
   log(`[1/4] posture done in ${postureRun.durationMs}ms  status=${postureRun.result.status} score=${postureRun.result.score}`);
   moduleRuns.push({
     name: "posture",
@@ -173,7 +183,7 @@ export function runScan(options: ScanOptions): ScanRunResult {
   findings.push(...postureRun.result.findings);
 
   log("[2/4] skill/mcp scan ...");
-  const skillRun = moduleTiming(() => runSkillScan(workspacePath));
+  const skillRun = moduleTiming(() => runSkillScan(workspacePath, llmConfig, log));
   log(`[2/4] skill done in ${skillRun.durationMs}ms  status=${skillRun.result.status} score=${skillRun.result.score}`);
   moduleRuns.push({
     name: "skill",
@@ -232,7 +242,7 @@ export function runScan(options: ScanOptions): ScanRunResult {
   }
 
   log("[4/4] memory scan ...");
-  const memoryRun = moduleTiming(() => runMemoryScan(workspacePath));
+  const memoryRun = moduleTiming(() => runMemoryScan(workspacePath, llmConfig, log));
   log(`[4/4] memory done in ${memoryRun.durationMs}ms  status=${memoryRun.result.status} score=${memoryRun.result.score}`);
   moduleRuns.push({
     name: "memory",

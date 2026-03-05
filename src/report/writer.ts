@@ -167,7 +167,11 @@ function toMarkdown(report: ScanReport): string {
       lines.push(`> **Severity:** ${f.severity} — ${sevAction}`);
       lines.push("");
 
-      // Render evidence as a fenced block to preserve formatting
+      if (f.warning) {
+        lines.push(`> ⚠️ **Risk:** ${f.warning}`);
+        lines.push("");
+      }
+
       lines.push("**Evidence:**");
       lines.push("");
       lines.push("```");

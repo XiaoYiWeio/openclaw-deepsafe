@@ -14,6 +14,16 @@ function getMascotBase64(): string {
   }
 }
 
+function getFaviconBase64(): string {
+  try {
+    const faviconPath = path.resolve(__dirname, "../../docs/favicon.png");
+    const buf = fs.readFileSync(faviconPath);
+    return `data:image/png;base64,${buf.toString("base64")}`;
+  } catch {
+    return "";
+  }
+}
+
 const MODULE_LABELS: Record<string, string> = {
   posture: "Deployment Posture",
   skill: "Skill / MCP",
@@ -122,6 +132,7 @@ const DEEPSAFE_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 241.
 
 export function toHtml(report: ScanReport): string {
   const mascotSrc = getMascotBase64();
+  const faviconSrc = getFaviconBase64();
   const s = report.scores;
   const totalColor = scoreColor(s.total);
   const totalColorDim = scoreColorDim(s.total);
@@ -276,12 +287,17 @@ export function toHtml(report: ScanReport): string {
         ? `<div class="finding-source"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg><span>${escHtml(f.source)}</span></div>`
         : "";
 
+      const warningHtml = f.warning
+        ? `<div class="finding-warning"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>${escHtml(f.warning)}</span></div>`
+        : "";
+
       findingsHtml += `<div class="finding-card" style="border-left-color:${sevColor}">
         <div class="finding-top">
           <span class="sev-badge" style="background:${sevColor}">${f.severity}</span>
           <span class="finding-title">${escHtml(f.title)}</span>
           <span class="finding-id">${escHtml(f.id)}</span>
         </div>
+        ${warningHtml}
         ${sourceHtml}
         <details class="finding-details">
           <summary class="finding-summary">View Evidence &amp; Remediation</summary>
@@ -312,6 +328,7 @@ export function toHtml(report: ScanReport): string {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>openclaw-deepsafe Security Report</title>
+${faviconSrc ? `<link rel="icon" type="image/png" href="${faviconSrc}">` : ""}
 <style>
 :root {
   --bg-primary: #0a0e1a;
@@ -789,6 +806,25 @@ body {
   gap: 10px;
   padding: 14px 16px;
   flex-wrap: wrap;
+}
+
+.finding-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 16px;
+  margin: 0 12px 4px;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #fbbf24;
+}
+.finding-warning svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #f59e0b;
 }
 
 .finding-source {
