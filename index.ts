@@ -295,20 +295,30 @@ export default function register(api: CliApi) {
           const riskLabel = s.total >= 85 ? "LOW RISK" : s.total >= 65 ? "MEDIUM RISK" : s.total >= 40 ? "HIGH RISK" : "CRITICAL";
           const durationSec = (result.report.metadata.durationMs / 1000).toFixed(1);
 
+          const W = 52;
+          const bar = "━".repeat(W);
+          const padLine = (left: string, right: string) => {
+            const vis = (s: string) => s.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{1F900}-\u{1F9FF}]/gu, "XX");
+            const pad = W - vis(left).length - vis(right).length;
+            return left + " ".repeat(Math.max(1, pad)) + right;
+          };
+
           console.log("");
-          console.log("╔══════════════════════════════════════════╗");
-          console.log("║     🛡️  DeepSafe Preflight Report        ║");
-          console.log("╚══════════════════════════════════════════╝");
+          console.log(`  ┏${bar}┓`);
+          console.log(`  ┃${" ".repeat(Math.floor((W - 26) / 2))}🛡️  DeepSafe Preflight Report${" ".repeat(Math.ceil((W - 26) / 2))}┃`);
+          console.log(`  ┗${bar}┛`);
           console.log("");
-          console.log(`  ${riskIcon} Overall Score: ${s.total}/100 (${riskLabel})`);
-          console.log(`  📊 Findings: ${totalFindings} (🔴${critCount} 🟠${highCount} 🟡${medCount} 🟢${lowCount})`);
+          console.log(`  ${padLine(`  ${riskIcon}  Score: ${s.total}/100 (${riskLabel})`, `${totalFindings} findings`)}`);
+          console.log(`  ${"─".repeat(W)}`);
+          console.log(`  ${padLine("  🔴 CRITICAL  " + critCount, "🟠 HIGH  " + highCount)}`)
+          console.log(`  ${padLine("  🟡 MEDIUM    " + medCount, "🟢 LOW   " + lowCount)}`)
+          console.log(`  ${"─".repeat(W)}`);
+          console.log(`  ${padLine("  🔒 Posture   " + s.posture + "/25", "🧩 Skill   " + s.skill + "/25")}`);
+          console.log(`  ${padLine("  🧠 Model     " + s.model + "/25", "💾 Memory  " + s.memory + "/25")}`);
+          console.log(`  ${"─".repeat(W)}`);
+          console.log(`    ⏱️  ${durationSec}s  ·  ${result.cacheHit ? "📦 cached" : "🔄 fresh"}  ·  ${result.report.metadata.profile} mode`);
           console.log("");
-          console.log(`  🔒 Posture: ${s.posture}/25  🧩 Skill: ${s.skill}/25  🧠 Model: ${s.model}/25  💾 Memory: ${s.memory}/25`);
-          console.log("");
-          console.log(`  ⏱️  ${durationSec}s | ${result.cacheHit ? "📦 cached" : "🔄 fresh scan"} | profile: ${result.report.metadata.profile}`);
-          console.log("");
-          console.log(`  🌐 Report: file://${result.paths.htmlPath}`);
-          console.log(`  📋 Data:   ${result.paths.jsonPath}`);
+          console.log(`    📄 ${result.paths.htmlPath}`);
           console.log("");
 
           if (result.exitCode === 2) {
