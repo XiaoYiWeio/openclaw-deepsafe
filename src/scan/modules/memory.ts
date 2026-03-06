@@ -32,8 +32,8 @@ const SECRET_PATTERNS: Array<{ re: RegExp; label: string }> = [
   { re: /ASIA[0-9A-Z]{16}/, label: "AWS temporary access key (ASIA...)" },
   // Google Cloud
   { re: /AIza[A-Za-z0-9_\-]{35}/, label: "Google Cloud API key (AIza...)" },
-  // Azure
-  { re: /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i, label: "Azure/UUID-style secret (potential client-id or subscription key)" },
+  // Azure (only match when preceded by a secret-like key name to avoid matching session IDs)
+  { re: /(client[_-]?secret|subscription[_-]?key|tenant[_-]?secret|azure[_-]?key)\s*[:=]\s*["']?[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i, label: "Azure secret (client secret / subscription key)" },
   // Stripe
   { re: /sk_live_[A-Za-z0-9]{24,}/, label: "Stripe secret key (sk_live_...)" },
   { re: /rk_live_[A-Za-z0-9]{24,}/, label: "Stripe restricted key (rk_live_...)" },
@@ -77,6 +77,70 @@ const PII_PATTERNS: Array<{ re: RegExp; label: string }> = [
 
 const INJECTION_RE =
   /忽略之前(所有)?指令|以后都先执行|ignore\s+(all\s+)?previous\s+instructions|always\s+follow\s+this\s+hidden\s+rule|you\s+must\s+always/i;
+
+const MESSAGE_CONTENT_KEYS = new Set([
+  "content", "message", "text", "body", "input", "output",
+  "prompt", "response", "assistant", "user", "system",
+  "reasoning_content", "tool_input", "result",
+]);
+
+const SKIP_KEYS = new Set([
+  "id", "session_id", "sessionId", "request_id", "requestId",
+  "trace_id", "traceId", "span_id", "spanId", "run_id", "runId",
+  "conversation_id", "conversationId", "thread_id", "threadId",
+  "parent_id", "parentId", "agent_id", "agentId", "uuid",
+  "timestamp", "created_at", "updated_at", "ts", "date",
+  "model", "name", "role", "type", "status", "version",
+]);
+
+function extractMessageContent(obj: any, depth = 0): string {
+  if (depth > 8) return "";
+  if (typeof obj === "string") return obj;
+  if (Array.isArray(obj)) {
+    return obj.map((item: any) => extractMessageContent(item, depth + 1)).join("\n");
+  }
+  if (obj && typeof obj === "object") {
+    const parts: string[] = [];
+    for (const [key, val] of Object.entries(obj)) {
+      if (SKIP_KEYS.has(key)) continue;
+      if (MESSAGE_CONTENT_KEYS.has(key) && typeof val === "string") {
+        parts.push(val);
+      } else if (typeof val === "object" && val !== null) {
+        parts.push(extractMessageContent(val, depth + 1));
+      }
+    }
+    return parts.join("\n");
+  }
+  return "";
+}
+
+function getContentForScanning(filePath: string, rawContent: string): string {
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext === ".json") {
+    try {
+      const parsed = JSON.parse(rawContent);
+      return extractMessageContent(parsed);
+    } catch {
+      return rawContent;
+    }
+  }
+  if (ext === ".jsonl") {
+    const lines = rawContent.split("\n");
+    const extracted: string[] = [];
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        const parsed = JSON.parse(trimmed);
+        extracted.push(extractMessageContent(parsed));
+      } catch {
+        extracted.push(trimmed);
+      }
+    }
+    return extracted.join("\n");
+  }
+  return rawContent;
+}
 
 function maskSecret(raw: string): string {
   if (raw.length <= 10) return "*".repeat(raw.length);
@@ -212,14 +276,15 @@ export function runMemoryScan(
     const ext = path.extname(filePath).toLowerCase();
     if (![".json", ".jsonl", ".txt", ".md", ".log", ".yaml", ".yml", ""].includes(ext)) continue;
 
-    let content: string;
+    let rawContent: string;
     try {
-      content = fs.readFileSync(filePath, "utf-8");
+      rawContent = fs.readFileSync(filePath, "utf-8");
     } catch {
       continue;
     }
     scanned += 1;
     const relPath = filePath.replace(openclawRoot, "~/.openclaw");
+    const content = getContentForScanning(filePath, rawContent);
 
     // ── Secret detection ─────────────────────────────────────────────────
     for (const pattern of SECRET_PATTERNS) {
@@ -267,8 +332,8 @@ export function runMemoryScan(
       });
     }
 
-    // ── Persistent injection ─────────────────────────────────────────────
-    if (INJECTION_RE.test(content)) {
+    // ── Persistent injection (scan full content, not just messages) ─────
+    if (INJECTION_RE.test(rawContent)) {
       totalInjections++;
       const ctx = getLineContext(content, INJECTION_RE);
       findings.push({

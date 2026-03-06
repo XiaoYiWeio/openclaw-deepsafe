@@ -23,9 +23,8 @@ export type ScanOptions = {
   openclawConfigPath: string;
   workspacePath?: string;
   runModel: boolean;
-  apiBase?: string;
-  model?: string;
-  apiKey: string;
+  gatewayUrl: string;
+  gatewayToken: string;
   limit?: string;
   turns?: string;
   debug: boolean;
@@ -99,8 +98,7 @@ export function runScan(options: ScanOptions): ScanRunResult {
     pluginVersion,
     profile: options.profile,
     runModel: options.runModel,
-    apiBase: options.apiBase ?? "",
-    model: options.model ?? "",
+    gatewayUrl: options.gatewayUrl,
     limit: options.limit ?? "",
     turns: options.turns ?? "",
     openclawConfigPath: path.resolve(options.openclawConfigPath),
@@ -158,12 +156,14 @@ export function runScan(options: ScanOptions): ScanRunResult {
   };
 
   const llmConfig: LlmConfig | null =
-    options.runModel && options.apiBase && options.model
-      ? { apiBase: options.apiBase, model: options.model, apiKey: options.apiKey }
+    options.gatewayUrl && options.gatewayToken
+      ? { gatewayUrl: options.gatewayUrl, gatewayToken: options.gatewayToken }
       : null;
 
   if (llmConfig) {
-    log("LLM-enhanced scanning enabled for posture/skill/memory");
+    log(`LLM-enhanced scanning via gateway (${options.gatewayUrl})${!options.runModel ? " [model probes skipped, LLM analysis active]" : ""}`);
+  } else {
+    log("LLM-enhanced scanning disabled (gateway not available)");
   }
 
   log("[1/4] posture scan ...");
@@ -199,12 +199,11 @@ export function runScan(options: ScanOptions): ScanRunResult {
   findings.push(...skillRun.result.findings);
 
   if (options.runModel) {
-    log("[3/4] model persuasion scan ... (this may take a few minutes)");
+    log("[3/4] model probes via gateway ... (this may take a few minutes)");
     const modelRun = moduleTiming(() =>
       runModelScan({
-        apiBase: options.apiBase,
-        apiKey: options.apiKey,
-        model: options.model,
+        gatewayUrl: options.gatewayUrl,
+        gatewayToken: options.gatewayToken,
         profile: options.profile,
         limit: options.limit,
         turns: options.turns,
@@ -236,7 +235,7 @@ export function runScan(options: ScanOptions): ScanRunResult {
       startedAt: now,
       endedAt: now,
       durationMs: 0,
-      error: "Skipped via --no-model",
+      error: "Skipped (--skip-model or gateway not available)",
     });
     scoreMap.model = 100;
   }
@@ -256,6 +255,39 @@ export function runScan(options: ScanOptions): ScanRunResult {
   });
   scoreMap.memory = clampScore(memoryRun.result.score);
   findings.push(...memoryRun.result.findings);
+
+  // ── LLM-generated executive summary ──────────────────────────────────
+  let summary: string | undefined;
+  if (llmConfig && findings.length > 0) {
+    try {
+      log("[summary] generating executive summary via LLM...");
+      const findingBrief = findings
+        .slice(0, 30)
+        .map((f: any) => `[${f.severity}] ${f.category}: ${f.title}${f.warning ? " — " + f.warning : ""}`)
+        .join("\n");
+      const { chatCompletion: chat } = require("./llm");
+      const summaryResponse = chat(llmConfig, [
+        {
+          role: "system",
+          content:
+            "You are a security expert writing a brief executive summary of an AI agent security scan. " +
+            "Write 3-5 sentences in plain English for a non-technical audience. Focus on: " +
+            "(1) The most critical risks found, (2) What the user should fix first, (3) Overall security posture. " +
+            "Be specific — mention actual finding titles. Do NOT use markdown formatting. Keep it under 200 words.",
+        },
+        {
+          role: "user",
+          content:
+            `Scan scores: Posture=${scoreMap.posture}, Skill=${scoreMap.skill}, Model=${scoreMap.model}, Memory=${scoreMap.memory}\n` +
+            `Total findings: ${findings.length}\n\nTop findings:\n${findingBrief}`,
+        },
+      ], 1024);
+      summary = summaryResponse.trim();
+      if (summary) log(`[summary] done (${summary.length} chars)`);
+    } catch (err: any) {
+      log(`[summary] LLM summary failed: ${err?.message ?? err}`);
+    }
+  }
 
   const endedMs = Date.now();
   const total = clampScore(
@@ -279,6 +311,7 @@ export function runScan(options: ScanOptions): ScanRunResult {
       model: scoreMap.model,
       memory: scoreMap.memory,
     },
+    summary,
     findings,
     modules: moduleRuns,
   };

@@ -47,6 +47,7 @@ export type ScanMetadata = {
 export type ScanReport = {
   metadata: ScanMetadata;
   scores: ScanScores;
+  summary?: string;
   findings: Finding[];
   modules: ModuleSummary[];
 };

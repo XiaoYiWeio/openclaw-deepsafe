@@ -8,9 +8,8 @@ const os = require("os");
 import { Finding, FindingCategory, Severity } from "../report/schema";
 
 export type LlmConfig = {
-  apiBase: string;
-  model: string;
-  apiKey: string;
+  gatewayUrl: string;
+  gatewayToken: string;
 };
 
 type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
@@ -23,10 +22,10 @@ export function chatCompletion(
   messages: ChatMessage[],
   maxTokens = 2048,
 ): string {
-  const endpoint = config.apiBase.replace(/\/+$/, "") + "/chat/completions";
+  const endpoint = config.gatewayUrl.replace(/\/+$/, "") + "/v1/chat/completions";
 
   const payload = JSON.stringify({
-    model: config.model,
+    model: "openclaw:main",
     messages,
     max_tokens: maxTokens,
     temperature: 0.2,
@@ -41,9 +40,7 @@ export function chatCompletion(
       "--max-time", String(Math.ceil(LLM_TIMEOUT_MS / 1000)),
       "-X", "POST",
       "-H", "Content-Type: application/json",
-      ...(config.apiKey && config.apiKey !== "EMPTY"
-        ? ["-H", `Authorization: Bearer ${config.apiKey}`]
-        : []),
+      "-H", `Authorization: Bearer ${config.gatewayToken}`,
       "-d", `@${tmpFile}`,
       endpoint,
     ];

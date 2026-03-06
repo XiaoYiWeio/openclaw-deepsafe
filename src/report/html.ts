@@ -360,10 +360,112 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Sidebar ── */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 200px;
+  height: 100vh;
+  background: rgba(15,23,42,0.95);
+  backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  padding: 24px 16px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+.sidebar-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.3);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+.sidebar-link {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.55);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.sidebar-link:hover {
+  color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.06);
+}
+.sidebar-link.active {
+  color: #60a5fa;
+  background: rgba(96,165,250,0.1);
+  font-weight: 600;
+}
+.sidebar-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+  margin: 12px 0;
+}
+.sidebar-scores {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sidebar-score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+}
+.sidebar-score b {
+  margin-left: auto;
+  color: rgba(255,255,255,0.8);
+}
+.sidebar-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .container { margin-left: 0 !important; }
+}
+
 .container {
   max-width: 900px;
   margin: 0 auto;
+  margin-left: 220px;
   padding: 0 24px 80px;
+}
+
+/* ── Summary Section ── */
+.summary-section { margin-bottom: 40px; }
+.summary-box {
+  background: rgba(96,165,250,0.06);
+  border: 1px solid rgba(96,165,250,0.15);
+  border-radius: 14px;
+  padding: 24px;
+}
+.summary-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #60a5fa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+.summary-text {
+  color: rgba(255,255,255,0.8);
+  font-size: 14px;
+  line-height: 1.8;
+  margin: 0;
 }
 
 /* ── Hero Section ── */
@@ -1093,10 +1195,25 @@ details[open] > .finding-summary::before {
 </style>
 </head>
 <body>
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-title">Navigation</div>
+  <a href="#sec-overview" class="sidebar-link active">Overview</a>
+  ${report.summary ? '<a href="#sec-summary" class="sidebar-link">Summary</a>' : ""}
+  <a href="#sec-modules" class="sidebar-link">Module Scores</a>
+  <a href="#sec-severity" class="sidebar-link">Severity</a>
+  <a href="#sec-findings" class="sidebar-link">Findings</a>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-scores">
+    <div class="sidebar-score"><span class="sidebar-dot" style="background:${scoreColor(s.posture)}"></span>Posture <b>${s.posture}</b></div>
+    <div class="sidebar-score"><span class="sidebar-dot" style="background:${scoreColor(s.skill)}"></span>Skill <b>${s.skill}</b></div>
+    <div class="sidebar-score"><span class="sidebar-dot" style="background:${scoreColor(s.model)}"></span>Model <b>${s.model}</b></div>
+    <div class="sidebar-score"><span class="sidebar-dot" style="background:${scoreColor(s.memory)}"></span>Memory <b>${s.memory}</b></div>
+  </div>
+</nav>
 <div class="container">
 
   <!-- Hero -->
-  <div class="hero">
+  <div id="sec-overview" class="hero">
     ${mascotSrc ? `<div class="hero-mascot"><img src="${mascotSrc}" alt="openclaw-deepsafe"></div>` : ""}
     <h1 class="hero-title">openclaw-deepsafe</h1>
     <div class="hero-powered">Powered by ${DEEPSAFE_LOGO}</div>
@@ -1136,8 +1253,23 @@ details[open] > .finding-summary::before {
     </div>
   </div>
 
+  <!-- Executive Summary -->
+  ${report.summary ? `<div id="sec-summary" class="summary-section fade-in" style="animation-delay:0.15s">
+    <div class="section-header">
+      <h2>Executive Summary</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>AI-Generated Analysis</span>
+      </div>
+      <p class="summary-text">${escHtml(report.summary)}</p>
+    </div>
+  </div>` : ""}
+
   <!-- Modules -->
-  <div class="modules-section">
+  <div id="sec-modules" class="modules-section">
     <div class="section-header">
       <h2>Module Scores</h2>
       <div class="section-line"></div>
@@ -1148,7 +1280,7 @@ details[open] > .finding-summary::before {
   </div>
 
   <!-- Severity Breakdown -->
-  <div class="severity-section fade-in" style="animation-delay:0.2s">
+  <div id="sec-severity" class="severity-section fade-in" style="animation-delay:0.2s">
     <div class="section-header">
       <h2>Severity Breakdown</h2>
       <div class="section-line"></div>
@@ -1157,7 +1289,7 @@ details[open] > .finding-summary::before {
   </div>
 
   <!-- Findings -->
-  <div class="findings-section">
+  <div id="sec-findings" class="findings-section">
     <div class="section-header">
       <h2>Detailed Findings</h2>
       <div class="section-line"></div>
@@ -1187,6 +1319,27 @@ details[open] > .finding-summary::before {
   </div>
 
 </div>
+<script>
+(function(){
+  var links = document.querySelectorAll('.sidebar-link');
+  var sections = [];
+  links.forEach(function(l){ var t = l.getAttribute('href'); if(t) sections.push({el:document.querySelector(t),link:l}); });
+  function update(){
+    var scrollY = window.scrollY + 80;
+    var active = sections[0];
+    sections.forEach(function(s){ if(s.el && s.el.offsetTop <= scrollY) active = s; });
+    links.forEach(function(l){ l.classList.remove('active'); });
+    if(active && active.link) active.link.classList.add('active');
+  }
+  window.addEventListener('scroll', update, {passive:true});
+  update();
+  links.forEach(function(l){ l.addEventListener('click', function(e){
+    e.preventDefault();
+    var t = document.querySelector(this.getAttribute('href'));
+    if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+  }); });
+})();
+</script>
 </body>
 </html>`;
 }

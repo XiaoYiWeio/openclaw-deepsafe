@@ -282,6 +282,25 @@ nav svg { height: 28px; width: auto; }
   max-width: 100%;
   overflow-x: auto;
 }
+.install-alt {
+  margin-top: 16px;
+  text-align: center;
+}
+.install-alt-label {
+  display: block;
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+.install-cmd-alt {
+  margin-top: 0;
+  font-size: 12px;
+  padding: 10px 16px;
+  opacity: 0.75;
+}
+.install-cmd-alt:hover { opacity: 1; }
+.install-cmd-alt .install-cmd-text { font-size: 11px; }
 
 .install-cmd:hover {
   border-color: rgba(59,130,246,0.4);
@@ -803,13 +822,24 @@ footer {
       </a>
     </div>
 
-    <div class="install-cmd reveal reveal-delay-4" id="install-cmd" onclick="copyInstall()">
+    <div class="install-cmd reveal reveal-delay-4" id="install-cmd" onclick="copyInstall('direct')">
       <span class="install-cmd-prompt">$</span>
       <span class="install-cmd-text">openclaw plugins install github:XiaoYiWeio/openclaw-deepsafe</span>
       <span class="install-cmd-copy" id="install-cmd-copy">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
         Click to copy
       </span>
+    </div>
+    <div class="install-alt reveal reveal-delay-4">
+      <span class="install-alt-label">Alternative (git clone):</span>
+      <div class="install-cmd install-cmd-alt" id="install-cmd-alt" onclick="copyInstall('clone')">
+        <span class="install-cmd-prompt">$</span>
+        <span class="install-cmd-text">git clone https://github.com/XiaoYiWeio/openclaw-deepsafe.git ~/.openclaw/openclaw-deepsafe && openclaw plugins install -l ~/.openclaw/openclaw-deepsafe</span>
+        <span class="install-cmd-copy" id="install-cmd-copy-alt">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Click to copy
+        </span>
+      </div>
     </div>
   </div>
 </section>
@@ -1096,12 +1126,17 @@ footer {
 <div class="copied-toast" id="copied-toast">Copied! Paste into your terminal to install.</div>
 
 <script>
-function copyInstall() {
-  var cmd = 'openclaw plugins install github:XiaoYiWeio/openclaw-deepsafe';
+function copyInstall(method) {
+  var cmds = {
+    direct: 'openclaw plugins install github:XiaoYiWeio/openclaw-deepsafe',
+    clone: 'git clone https://github.com/XiaoYiWeio/openclaw-deepsafe.git ~/.openclaw/openclaw-deepsafe && openclaw plugins install -l ~/.openclaw/openclaw-deepsafe'
+  };
+  var cmd = cmds[method] || cmds.direct;
+  var suffix = method === 'clone' ? '-alt' : '';
   navigator.clipboard.writeText(cmd).then(function() {
     var toast = document.getElementById('copied-toast');
-    var cmdBox = document.getElementById('install-cmd');
-    var copyLabel = document.getElementById('install-cmd-copy');
+    var cmdBox = document.getElementById(method === 'clone' ? 'install-cmd-alt' : 'install-cmd');
+    var copyLabel = document.getElementById('install-cmd-copy' + suffix);
     toast.classList.add('show');
     cmdBox.classList.add('copied');
     copyLabel.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!';

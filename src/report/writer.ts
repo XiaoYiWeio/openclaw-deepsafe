@@ -97,6 +97,13 @@ function toMarkdown(report: ScanReport): string {
     lines.push("");
   }
 
+  if (report.summary) {
+    lines.push("### 🤖 AI Analysis");
+    lines.push("");
+    lines.push(`> ${report.summary.replace(/\n/g, "\n> ")}`);
+    lines.push("");
+  }
+
   // ── Module Scores Table ─────────────────────────────────────────────────────
   lines.push("## 📋 Module Scores");
   lines.push("");
@@ -194,9 +201,9 @@ function toMarkdown(report: ScanReport): string {
   // ── Footer ──────────────────────────────────────────────────────────────────
   lines.push("---");
   lines.push("");
-  lines.push("_Powered by [DeepSafe](https://github.com/XiaoYiWeio/DeepSafe) — AI safety evaluation framework_");
+  lines.push("_Powered by [openclaw-deepsafe](https://github.com/XiaoYiWeio/openclaw-deepsafe) — Preflight Security Scanner for OpenClaw_");
   lines.push("");
-  lines.push(`> ⭐ If this report helped you, consider giving us a star on [GitHub](https://github.com/XiaoYiWeio/DeepSafe)!`);
+  lines.push(`> ⭐ If this report helped you, consider giving us a star on [GitHub](https://github.com/XiaoYiWeio/openclaw-deepsafe)!`);
   lines.push("");
   return lines.join("\n");
 }

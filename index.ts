@@ -4,7 +4,7 @@ declare const process: any;
 const path = require("path");
 const os = require("os");
 const fs = require("fs");
-const { spawnSync } = require("child_process");
+const { spawnSync, execFileSync } = require("child_process");
 
 import { loadLatest } from "./src/cache/cache";
 import { runScan } from "./src/scan/orchestrator";
@@ -24,48 +24,80 @@ function defaultOpenClawConfig(): string {
   return path.resolve(os.homedir(), ".openclaw", "openclaw.json");
 }
 
-type ResolvedModelSettings = {
-  apiBase: string;
-  model: string;
-  apiKey: string;
-  source: "cli" | "openclaw-config";
+type GatewaySettings = {
+  gatewayUrl: string;
+  gatewayToken: string;
+  port: number;
 };
 
-function resolveModelSettings(opts: any, openclawConfigPath: string): ResolvedModelSettings | null {
-  const cliApiBase = String(opts.apiBase || "").trim();
-  const cliModel = String(opts.model || "").trim();
-  const cliApiKey = String(opts.apiKey || "").trim();
-  if (cliApiBase && cliModel) {
-    return {
-      apiBase: cliApiBase,
-      model: cliModel,
-      apiKey: cliApiKey || "EMPTY",
-      source: "cli",
-    };
-  }
-
-  if (!fs.existsSync(openclawConfigPath)) {
-    return null;
-  }
+function ensureChatCompletionsEnabled(configPath: string, debug: boolean): void {
+  if (!fs.existsSync(configPath)) return;
   try {
-    const cfg = JSON.parse(fs.readFileSync(openclawConfigPath, "utf-8"));
-    const primary = String(cfg?.agents?.defaults?.model?.primary ?? "").trim();
-    if (!primary.includes("/")) return null;
-    const [providerKey, modelId] = primary.split("/", 2);
-    const provider = cfg?.models?.providers?.[providerKey];
-    const apiBase = String(provider?.baseUrl ?? "").trim();
-    const model = String(modelId ?? "").trim();
-    const apiKeyFromCfg = String(provider?.apiKey ?? "").trim();
-    const apiKey = cliApiKey || apiKeyFromCfg || "EMPTY";
-    if (!apiBase || !model) return null;
-    return {
-      apiBase,
-      model,
-      apiKey,
-      source: "openclaw-config",
-    };
+    const raw = fs.readFileSync(configPath, "utf-8");
+    const cfg = JSON.parse(raw);
+    const enabled = cfg?.gateway?.http?.endpoints?.chatCompletions?.enabled;
+    if (enabled === true) return;
+
+    if (!cfg.gateway) cfg.gateway = {};
+    if (!cfg.gateway.http) cfg.gateway.http = {};
+    if (!cfg.gateway.http.endpoints) cfg.gateway.http.endpoints = {};
+    if (!cfg.gateway.http.endpoints.chatCompletions) cfg.gateway.http.endpoints.chatCompletions = {};
+    cfg.gateway.http.endpoints.chatCompletions.enabled = true;
+
+    fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2), "utf-8");
+    if (debug) console.log("deepsafe debug: auto-enabled gateway.http.endpoints.chatCompletions");
+    console.log("  ℹ️  Enabled OpenClaw Gateway Chat Completions endpoint (required for LLM analysis).");
+    console.log("     Please restart your OpenClaw Gateway for this to take effect.");
+    console.log("");
+  } catch {
+    // non-fatal
+  }
+}
+
+function resolveGatewaySettings(configPath: string, debug: boolean): GatewaySettings | null {
+  if (!fs.existsSync(configPath)) return null;
+  try {
+    const cfg = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    const port = Number(cfg?.gateway?.port ?? 0);
+    if (!port) return null;
+
+    let token = "";
+    const authMode = String(cfg?.gateway?.auth?.mode ?? "").toLowerCase();
+    if (authMode === "token") {
+      token = String(cfg?.gateway?.auth?.token ?? "");
+    } else if (authMode === "password") {
+      token = String(cfg?.gateway?.auth?.password ?? "");
+    }
+
+    if (!token) {
+      token = String(process.env.OPENCLAW_GATEWAY_TOKEN ?? "");
+    }
+
+    if (!token) {
+      if (debug) console.log("deepsafe debug: gateway auth token not found");
+      return null;
+    }
+
+    const gatewayUrl = `http://localhost:${port}`;
+    return { gatewayUrl, gatewayToken: token, port };
   } catch {
     return null;
+  }
+}
+
+function checkGatewayAlive(gw: GatewaySettings, debug: boolean): boolean {
+  try {
+    const result = execFileSync("curl", [
+      "-s", "-o", "/dev/null", "-w", "%{http_code}",
+      "--max-time", "3",
+      "-H", `Authorization: Bearer ${gw.gatewayToken}`,
+      `${gw.gatewayUrl}/v1/chat/completions`,
+    ], { encoding: "utf-8", timeout: 5000 });
+    const code = parseInt(result.trim(), 10);
+    if (debug) console.log(`deepsafe debug: gateway health check HTTP ${code}`);
+    return code > 0 && code < 500;
+  } catch {
+    return false;
   }
 }
 
@@ -164,12 +196,9 @@ export default function register(api: CliApi) {
         .option("--output <dir>", "Report output root directory", defaultOutputRoot())
         .option("--openclaw-config <path>", "OpenClaw config path", defaultOpenClawConfig())
         .option("--workspace <path>", "OpenClaw workspace path override", "")
-        .option("--api-base <url>", "OpenAI-compatible API base for model scan (optional if in openclaw.json)", "")
-        .option("--model <name>", "Model name for model scan (optional if in openclaw.json)", "")
-        .option("--api-key <key>", "API key for model scan (optional if in openclaw.json)", "")
         .option("--limit <n>", "Override model scan topic count", "")
         .option("--turns <n>", "Override model scan turns", "")
-        .option("--skip-model", "Skip model scanner", false)
+        .option("--skip-model", "Skip model scanner (probes)", false)
         .option("--debug", "Enable debug logs", false)
         .action((opts: any) => {
           const profile = String(opts.profile ?? "quick").toLowerCase();
@@ -204,17 +233,39 @@ export default function register(api: CliApi) {
           }
 
           const openclawConfigPath = path.resolve(String(opts.openclawConfig || defaultOpenClawConfig()));
-          const resolvedModel = !opts.skipModel ? resolveModelSettings(opts, openclawConfigPath) : null;
-          if (!opts.skipModel && !resolvedModel) {
-            console.error(
-              "deepsafe error: model scan config not found. Provide --api-base/--model or configure agents.defaults.model.primary + models.providers in openclaw.json.",
-            );
-            process.exit(2);
+          const debug = Boolean(opts.debug);
+
+          // ── Resolve gateway settings ──────────────────────────────────────
+          ensureChatCompletionsEnabled(openclawConfigPath, debug);
+          const gw = resolveGatewaySettings(openclawConfigPath, debug);
+
+          let gatewayAlive = false;
+          if (gw) {
+            gatewayAlive = checkGatewayAlive(gw, debug);
+            if (debug) {
+              console.log(`deepsafe debug: gateway at ${gw.gatewayUrl} alive=${gatewayAlive}`);
+            }
+            if (!gatewayAlive) {
+              console.log("  ⚠️  OpenClaw Gateway is not reachable. LLM-enhanced analysis and model probes will be disabled.");
+              console.log("     Start your gateway with: openclaw gateway start");
+              console.log("");
+            }
+          } else {
+            console.log("  ⚠️  Could not resolve gateway settings from openclaw.json. LLM features disabled.");
+            console.log("");
           }
 
-          if (opts.debug && resolvedModel) {
+          const canUseLlm = !!(gw && gatewayAlive);
+          const runModel = !opts.skipModel && canUseLlm;
+
+          if (!opts.skipModel && !canUseLlm) {
+            console.log("  ℹ️  Model probes skipped (gateway not available). Static analysis will still run.");
+            console.log("");
+          }
+
+          if (debug && gw) {
             console.log(
-              `deepsafe debug: model settings source=${resolvedModel.source}, api_base=${resolvedModel.apiBase}, model=${resolvedModel.model}`,
+              `deepsafe debug: gateway=${gw.gatewayUrl} llm=${canUseLlm} model_probes=${runModel}`,
             );
           }
 
@@ -225,13 +276,12 @@ export default function register(api: CliApi) {
             outputRoot: path.resolve(String(opts.output || defaultOutputRoot())),
             openclawConfigPath,
             workspacePath: String(opts.workspace || ""),
-            runModel: !opts.skipModel,
-            apiBase: resolvedModel?.apiBase || "",
-            model: resolvedModel?.model || "",
-            apiKey: resolvedModel?.apiKey || "EMPTY",
+            runModel,
+            gatewayUrl: gw?.gatewayUrl || "",
+            gatewayToken: gw?.gatewayToken || "",
             limit: String(opts.limit || ""),
             turns: String(opts.turns || ""),
-            debug: Boolean(opts.debug),
+            debug,
           });
 
           const s = result.report.scores;
@@ -265,7 +315,6 @@ export default function register(api: CliApi) {
             console.error("  ❌ Some modules failed — check the report for details.");
           }
 
-          // Auto-open HTML report in browser
           try {
             const htmlPath = result.paths.htmlPath;
             const platform = process.platform;
@@ -303,4 +352,3 @@ export default function register(api: CliApi) {
     { commands: ["deepsafe"] },
   );
 }
-

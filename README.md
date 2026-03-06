@@ -30,8 +30,17 @@
 
 ## Install
 
+**Option A — Direct install (if supported by your OpenClaw version):**
+
 ```bash
 openclaw plugins install github:XiaoYiWeio/openclaw-deepsafe
+```
+
+**Option B — Git clone + local install (works with all versions):**
+
+```bash
+git clone https://github.com/XiaoYiWeio/openclaw-deepsafe.git ~/.openclaw/openclaw-deepsafe
+openclaw plugins install -l ~/.openclaw/openclaw-deepsafe
 ```
 
 Then restart OpenClaw Gateway.

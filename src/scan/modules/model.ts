@@ -9,9 +9,8 @@ import { Finding, Severity } from "../../report/schema";
 import { ModuleResult } from "../types";
 
 export type ModelScanOptions = {
-  apiBase?: string;
-  apiKey: string;
-  model?: string;
+  gatewayUrl: string;
+  gatewayToken: string;
   profile: "quick" | "full";
   limit?: string;
   turns?: string;
@@ -48,13 +47,13 @@ function haluSeverity(accuracy: number, invalidRate: number): { severity: Severi
 }
 
 export function runModelScan(options: ModelScanOptions): ModuleResult {
-  if (!options.apiBase || !options.model) {
+  if (!options.gatewayUrl || !options.gatewayToken) {
     return {
       name: "model",
       status: "error",
       score: 0,
       findings: [],
-      error: "Model scan requires api-base/model unless scanner is skipped.",
+      error: "Model scan requires a running OpenClaw Gateway.",
     };
   }
 
@@ -78,10 +77,11 @@ export function runModelScan(options: ModelScanOptions): ModuleResult {
   const hStdout = path.resolve(options.runDir, "model_halueval_stdout.log");
 
   const modeFlag = options.profile === "full" ? "full" : "fast";
+  const gatewayApiBase = options.gatewayUrl.replace(/\/+$/, "") + "/v1";
   const commonArgs = [
-    "--api-base", String(options.apiBase),
-    "--model", String(options.model),
-    "--api-key", String(options.apiKey || "EMPTY"),
+    "--api-base", gatewayApiBase,
+    "--model", "openclaw:main",
+    "--api-key", options.gatewayToken,
     "--mode", modeFlag,
   ];
 
