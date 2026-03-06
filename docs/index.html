@@ -1206,7 +1206,7 @@ footer {
     <div class="section-header" style="text-align:center">
       <div class="section-label">Requirements</div>
       <h2 class="section-title">What you need to get started.</h2>
-      <p class="section-desc">Minimal dependencies. No pip installs, no Docker, no cloud accounts.</p>
+      <p class="section-desc">Just OpenClaw with a configured model. No pip installs, no Docker, no cloud accounts.</p>
     </div>
     <div class="req-grid">
       <div class="req-card reveal">
@@ -1215,7 +1215,7 @@ footer {
           <h4>OpenClaw</h4>
           <span class="req-version">&ge; 2026.3.x</span>
         </div>
-        <p class="req-desc">Core platform with Gateway for LLM routing. All model communication goes through the Gateway — no API keys needed in the plugin.</p>
+        <p class="req-desc">Core platform with at least one LLM model configured in <code>~/.openclaw/openclaw.json</code>.</p>
       </div>
       <div class="req-card reveal reveal-delay-1">
         <div class="req-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#339933" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
@@ -1223,7 +1223,7 @@ footer {
           <h4>Node.js</h4>
           <span class="req-version">&ge; 18</span>
         </div>
-        <p class="req-desc">JavaScript runtime — typically bundled with OpenClaw. No additional installation needed if OpenClaw is already working.</p>
+        <p class="req-desc">JavaScript runtime — typically bundled with OpenClaw. No additional installation needed.</p>
       </div>
       <div class="req-card reveal reveal-delay-2">
         <div class="req-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3776AB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
@@ -1231,15 +1231,13 @@ footer {
           <h4>Python 3</h4>
           <span class="req-version">&ge; 3.8</span>
         </div>
-        <p class="req-desc">Required for model safety probes (persuasion, sandbagging, deception, hallucination). Uses standard library only — no pip install needed.</p>
+        <p class="req-desc">For model safety probes. Uses standard library only — no pip install needed.</p>
       </div>
     </div>
     <div class="req-env reveal reveal-delay-3">
-      <div class="req-env-title">Environment Notes</div>
+      <div class="req-env-title">Environment</div>
       <div class="req-env-items">
         <div class="req-env-item"><span class="req-env-label">OS</span><span>macOS &middot; Linux &middot; Windows (via WSL)</span></div>
-        <div class="req-env-item"><span class="req-env-label">Gateway</span><span>Optional &mdash; enables LLM-enhanced analysis and model probes</span></div>
-        <div class="req-env-item"><span class="req-env-label">Model</span><span>Optional &mdash; enhances detection depth when configured in <code>~/.openclaw/openclaw.json</code></span></div>
         <div class="req-env-item"><span class="req-env-label">Network</span><span>Fully local &mdash; no data leaves your machine</span></div>
         <div class="req-env-item"><span class="req-env-label">Version</span><span>openclaw-deepsafe <strong>v0.2.0</strong></span></div>
       </div>

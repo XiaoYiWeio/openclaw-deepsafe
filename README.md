@@ -114,16 +114,14 @@ Hidden Unicode, prompt injection, dangerous runtimes, base64/hex encoded payload
 
 | Dependency | Version | Purpose |
 | :--- | :--- | :--- |
-| **OpenClaw** | >= 2026.3.x | Core platform (Gateway optional, enables LLM analysis) |
+| **OpenClaw** | >= 2026.3.x | Core platform with at least one configured LLM model |
 | **Node.js** | >= 18 | Runtime (bundled with OpenClaw) |
 | **Python 3** | >= 3.8 | Model safety probes (stdlib only, no pip needed) |
 
 ### Environment
 
 - **OS**: macOS, Linux (Windows via WSL)
-- **Gateway**: Optional — enables LLM-enhanced analysis when running (`openclaw gateway start`)
-- **Model**: Optional — enhances detection depth when configured in `~/.openclaw/openclaw.json`
-- **Network**: Fully local — no data leaves your machine unless model API calls go through your configured provider
+- **Network**: Fully local — no data leaves your machine
 
 ## Debug
 
