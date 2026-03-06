@@ -300,7 +300,7 @@ nav svg { height: 28px; width: auto; }
   opacity: 0.75;
 }
 .install-cmd-alt:hover { opacity: 1; }
-.install-cmd-alt .install-cmd-text { font-size: 11px; }
+.install-cmd-alt .install-cmd-text { font-size: 11px; white-space: pre-wrap; word-break: break-all; line-height: 1.7; }
 
 .install-cmd:hover {
   border-color: rgba(59,130,246,0.4);
@@ -934,7 +934,7 @@ footer {
       <span class="install-alt-label">Alternative (git clone):</span>
       <div class="install-cmd install-cmd-alt" id="install-cmd-alt" onclick="copyInstall('clone')">
         <span class="install-cmd-prompt">$</span>
-        <span class="install-cmd-text">git clone https://github.com/XiaoYiWeio/openclaw-deepsafe.git ~/.openclaw/openclaw-deepsafe && openclaw plugins install -l ~/.openclaw/openclaw-deepsafe</span>
+        <span class="install-cmd-text">git clone https://github.com/XiaoYiWeio/openclaw-deepsafe.git \<br>&nbsp;&nbsp;~/.openclaw/openclaw-deepsafe<br>&amp;&amp; openclaw plugins install -l ~/.openclaw/openclaw-deepsafe</span>
         <span class="install-cmd-copy" id="install-cmd-copy-alt">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
           Click to copy
