@@ -1,0 +1,737 @@
+{
+  "metadata": {
+    "pluginVersion": "0.1.0",
+    "profile": "quick",
+    "generatedAt": "2026-03-06T10:16:50.349Z",
+    "durationMs": 117903,
+    "fromCache": false,
+    "fingerprint": "2cb2b7b60f71c3bc4537fe0717548218b3d656a0205c3124dc5de690ac3b4aff",
+    "ttlDays": 3
+  },
+  "scores": {
+    "total": 38,
+    "posture": 5,
+    "skill": 4,
+    "model": 25,
+    "memory": 4
+  },
+  "summary": "Severe security posture with critical hardcoded credentials exposed over unencrypted HTTP and multiple command injection vulnerabilities in skills allowing arbitrary code execution.",
+  "structuredSummary": {
+    "overview": "Severe security posture with critical hardcoded credentials exposed over unencrypted HTTP and multiple command injection vulnerabilities in skills allowing arbitrary code execution.",
+    "critical_issues": [
+      "Hardcoded MiniMax API Key in config file — credential exposed via backups/version control",
+      "Model API Key transmitted over HTTP to 35.220.164.252:3888 — actively intercepted in plaintext",
+      "Hardcoded Feishu App Secret — enables account takeover if config leaked",
+      "Command/argument injection in 15+ skill files — allows arbitrary system command execution",
+      "Hardcoded Gateway Auth Token — exposes admin API to anyone with config access"
+    ],
+    "recommendations": [
+      "1. Move all API keys to environment variables or secrets manager immediately",
+      "2. Change MiniMax and Feishu API keys/secrets NOW — assume compromise",
+      "3. Switch provider endpoint from HTTP to HTTPS encrypting traffic",
+      "4. Audit and sanitize all skill files with exec/shell patterns — remove or restrict",
+      "5. Enable audit logging and configure agent sandboxing with tool restrictions"
+    ]
+  },
+  "findings": [
+    {
+      "id": "posture-provider-inline-key-zhangbo",
+      "category": "posture",
+      "severity": "MEDIUM",
+      "title": "API key for provider \"zhangbo\" is hardcoded in config",
+      "warning": "Hardcoded API keys can be leaked through backups, version control, or log files — leading to unauthorized model usage and unexpected billing charges.",
+      "source": "/Users/zhangbo/.openclaw/openclaw.json",
+      "evidence": "models.providers.zhangbo.apiKey = \"sk-mtx*****************************************BR2N\" (51 chars)",
+      "remediation": "Move the key to an environment variable (e.g. OPENCLAW_PROVIDER_KEY) and reference it in config, then rotate the exposed key."
+    },
+    {
+      "id": "posture-provider-no-tls-zhangbo",
+      "category": "posture",
+      "severity": "HIGH",
+      "title": "Provider \"zhangbo\" uses unencrypted HTTP",
+      "warning": "API keys and model prompts are sent in plaintext — any network eavesdropper can intercept credentials and sensitive conversation data.",
+      "source": "/Users/zhangbo/.openclaw/openclaw.json",
+      "evidence": "models.providers.zhangbo.baseUrl = \"http://35.220.164.252:3888/v1\"\nAPI keys and model traffic are transmitted in plaintext over the network.",
+      "remediation": "Switch to HTTPS endpoint, or tunnel through SSH/VPN if the endpoint does not support TLS."
+    },
+    {
+      "id": "posture-plugin-no-restrictions",
+      "category": "posture",
+      "severity": "LOW",
+      "title": "Enabled plugins have no explicit permission restrictions",
+      "warning": "A compromised or malicious plugin can access all tools and data without any boundary, potentially exfiltrating sensitive information or executing harmful actions.",
+      "source": "/Users/zhangbo/.openclaw/openclaw.json",
+      "evidence": "2 plugin(s) enabled: openclaw-plugin-deepsafe, feishu\nNone define permissions, allowList, or denyList.",
+      "remediation": "Consider adding per-plugin permission constraints to limit the blast radius of a compromised plugin."
+    },
+    {
+      "id": "posture-no-logging",
+      "category": "posture",
+      "severity": "MEDIUM",
+      "title": "No logging or audit trail configured",
+      "warning": "Without audit logging, you cannot detect, investigate, or prove security incidents — malicious actions will leave no trace.",
+      "source": "/Users/zhangbo/.openclaw/openclaw.json",
+      "evidence": "No logging, audit, or log configuration section found in openclaw.json.",
+      "remediation": "Enable logging in openclaw.json to maintain an audit trail of agent actions. Consider setting logging.level to 'info' or higher."
+    },
+    {
+      "id": "posture-no-sandbox",
+      "category": "posture",
+      "severity": "MEDIUM",
+      "title": "No sandbox or tool restriction configured for agents",
+      "warning": "Without sandboxing, agents can access your entire filesystem, network, and system commands — a single compromised agent could cause full system compromise.",
+      "source": "/Users/zhangbo/.openclaw/openclaw.json",
+      "evidence": "No sandbox, isolation, or allowedTools configuration found.\nAgents may have unrestricted access to system resources.",
+      "remediation": "Configure agent sandboxing (filesystem, network, command restrictions) in openclaw.json to limit agent capabilities."
+    },
+    {
+      "id": "posture-provider-unknown-zhangbo",
+      "category": "posture",
+      "severity": "LOW",
+      "title": "Provider \"zhangbo\" uses a non-standard endpoint",
+      "warning": "Custom model endpoints may log your prompts and responses — your code, conversations, and sensitive data could be stored on unknown third-party servers.",
+      "source": "/Users/zhangbo/.openclaw/openclaw.json",
+      "evidence": "models.providers.zhangbo.baseUrl = \"http://35.220.164.252:3888/v1\"\nThis endpoint is not a recognized major provider (OpenAI, Anthropic, Google, Azure).",
+      "remediation": "Verify you trust this endpoint's operator and their data handling policies. Review their privacy/security documentation."
+    },
+    {
+      "id": "llm-posture-1",
+      "category": "posture",
+      "severity": "CRITICAL",
+      "title": "Model API Key transmitted over HTTP",
+      "warning": "The MiniMax API key is sent to http://35.220.164.252:3888 in cleartext, exposing credentials to network interception.",
+      "source": "/Users/zhangbo/.openclaw/openclaw.json",
+      "evidence": "models.providers.zhangbo.baseUrl = \"http://35.220.164.252:3888/v1\"",
+      "remediation": "Change baseUrl to HTTPS (https://35.220.164.252:3888/v1) or use a local model provider with HTTPS."
+    },
+    {
+      "id": "llm-posture-2",
+      "category": "posture",
+      "severity": "CRITICAL",
+      "title": "Hardcoded MiniMax API Key",
+      "warning": "API key is hardcoded in config file. If this file is version-controlled or shared, the key is compromised.",
+      "source": "/Users/zhangbo/.openclaw/openclaw.json",
+      "evidence": "models.providers.zhangbo.apiKey = \"sk-mtxeVbPPoxX5tTY8e67DzE2WlmtOPP4opgrvyv0bibfuBR2N\"",
+      "remediation": "Use environment variable: set apiKey to ${MINIMAX_API_KEY} or load from secure vault."
+    },
+    {
+      "id": "llm-posture-3",
+      "category": "posture",
+      "severity": "HIGH",
+      "title": "Hardcoded Feishu App Secret",
+      "warning": "Feishu app secret is hardcoded, allowing account takeover if config is exposed.",
+      "source": "/Users/zhangbo/.openclaw/openclaw.json",
+      "evidence": "channels.feishu.appSecret = \"SQCosy2itXH9MQUMPXe6sdt6HcOWVX7i\"",
+      "remediation": "Load appSecret from environment variable (e.g., ${FEISHU_APP_SECRET}) or secrets manager."
+    },
+    {
+      "id": "llm-posture-4",
+      "category": "posture",
+      "severity": "HIGH",
+      "title": "Hardcoded Feishu Verification Token",
+      "warning": "Webhook verification token is hardcoded, enabling attackers to forge events if compromised.",
+      "source": "/Users/zhangbo/.openclaw/openclaw.json",
+      "evidence": "channels.feishu.verificationToken = \"SaFV2nZEajlwNyKw87H0lb73MHasFpbI\"",
+      "remediation": "Move to environment variable or secrets manager."
+    },
+    {
+      "id": "llm-posture-5",
+      "category": "posture",
+      "severity": "HIGH",
+      "title": "Hardcoded Gateway Auth Token",
+      "warning": "Gateway authentication token is hardcoded in config, exposing the admin API.",
+      "source": "/Users/zhangbo/.openclaw/openclaw.json",
+      "evidence": "gateway.auth.token = \"c2bb17277256b651b6c9458222e1ee7ae0d313892a71f41d\"",
+      "remediation": "Use environment variable (e.g., ${GATEWAY_TOKEN}) instead of hardcoding."
+    },
+    {
+      "id": "llm-posture-6",
+      "category": "posture",
+      "severity": "MEDIUM",
+      "title": "Gateway bind to loopback only",
+      "warning": "Gateway binds to loopback (127.0.0.1), limiting remote administration but also preventing legitimate remote access if needed.",
+      "source": "/Users/zhangbo/.openclaw/openclaw.json",
+      "evidence": "gateway.bind = \"loopback\"",
+      "remediation": "If remote access is needed, bind to specific IP with strong auth; otherwise this is acceptable."
+    },
+    {
+      "id": "llm-posture-7",
+      "category": "posture",
+      "severity": "LOW",
+      "title": "Feishu group policy uses allowlist",
+      "warning": "Group access is restricted to allowlist (oc_zhangbo), which is good practice.",
+      "source": "/Users/zhangbo/.openclaw/openclaw.json",
+      "evidence": "channels.feishu.groupPolicy = \"allowlist\", groupAllowFrom = [\"oc_zhangbo\"]",
+      "remediation": "No action needed - this is a secure configuration."
+    },
+    {
+      "id": "skill-arg-injection-2",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/apple-notes/SKILL.md",
+      "evidence": "Injection patterns found:\n  Line 3: description: Manage Apple Notes via the `memo` CLI on macOS (create, view, edit, delete, search, move, and export notes)...\n  Line 10: Use `memo notes` to manage Apple Notes directly from the terminal. Create, view, edit, delete, search, move notes betwee...\n  Line 13: - Install (Homebrew): `brew tap antoniorodr/memo && brew install antoniorodr/memo/memo`\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "skill-arg-injection-5",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/apple-reminders/SKILL.md",
+      "evidence": "Injection patterns found:\n  Line 3: description: Manage Apple Reminders via the `remindctl` CLI on macOS (list, add, edit, complete, delete). Supports lists...\n  Line 10: Use `remindctl` to manage Apple Reminders directly from the terminal. It supports list filtering, date-based views, and ...\n  Line 13: - Install (Homebrew): `brew install steipete/tap/remindctl`\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "skill-arg-injection-8",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/duckduckgo-search/SKILL.md",
+      "evidence": "Injection patterns found:\n  Line 338: | `cn-zh` | 中国 |\n  Line 339: | `us-en` | 美国 |\n  Line 340: | `uk-en` | 英国 |\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "skill-excessive-bash-duckduckgo-search",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Skill \"duckduckgo-search\" grants broad shell execution permissions",
+      "warning": "Wildcard shell access means the AI can run any command on your system — including destructive operations like rm -rf or data exfiltration.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/duckduckgo-search/SKILL.md",
+      "evidence": "allowed-tools declaration: Bash(duckduckgo-search:*), Bash(python:*), Bash(pip:*), Bash(uv:*)\nHigh-risk entries: bash(python:*)\nThese allow the skill to execute arbitrary commands via shell.",
+      "remediation": "Restrict allowed-tools to specific commands instead of wildcards. For example, use Bash(pip:install) instead of Bash(pip:*)."
+    },
+    {
+      "id": "skill-arg-injection-12",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/file-search/SKILL.md",
+      "evidence": "Injection patterns found:\n  Line 3: description: \"Fast file-name and content search using `fd` and `rg` (ripgrep).\"\n  Line 33: Fast file-name and content search using `fd` and `rg` (ripgrep).\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "skill-arg-injection-15",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/github/SKILL.md",
+      "evidence": "Injection patterns found:\n  Line 3: description: \"Interact with GitHub using the `gh` CLI. Use `gh issue`, `gh pr`, `gh run`, and `gh api` for issues, PRs, ...\n  Line 8: Use the `gh` CLI to interact with GitHub. Always specify `--repo owner/repo` when not in a git directory, or use URLs di...\n  Line 34: The `gh api` command is useful for accessing data not available through other subcommands.\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "skill-arg-injection-18",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/obsidian-direct/SKILL.md",
+      "evidence": "Injection patterns found:\n  Line 11: Obsidian vault = folder with Markdown files + `.obsidian/` config.\n  Line 15: - **Vault Path:** `/home/ruslan/webdav/data/ruslain`\n  Line 16: - **Env:** `OBSIDIAN_VAULT=/home/ruslan/webdav/data/ruslain`\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "skill-dangerous-runtime-21",
+      "category": "skill",
+      "severity": "MEDIUM",
+      "title": "Dangerous execution primitive in skill file",
+      "warning": "This skill contains code that can execute arbitrary system commands — a compromised or malicious skill could delete files, install malware, or steal credentials.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/obsidian-direct/scripts/obsidian_search.py",
+      "evidence": "Matched patterns:\n  Line 14: import subprocess\n  Line 81: result = subprocess.run(\n  Line 87: except (FileNotFoundError, subprocess.TimeoutExpired):\nThese functions can execute arbitrary system commands.",
+      "remediation": "Validate and sanitize all inputs before passing to execution functions. Consider using a sandbox or allow-list for permitted commands."
+    },
+    {
+      "id": "skill-arg-injection-23",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/playwright-scraper-skill/CHANGELOG.md",
+      "evidence": "Injection patterns found:\n  Line 7: - **Project Renamed** — `web-scraper` → `playwright-scraper-skill`\n  Line 37: - ✅ `playwright-simple.js` — Fast simple scraper\n  Line 38: - ✅ `playwright-stealth.js` — Anti-bot protected version (primary) ⭐\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "skill-arg-injection-24",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/playwright-scraper-skill/CONTRIBUTING.md",
+      "evidence": "Injection patterns found:\n  Line 20: 1. Create an Issue with `[Feature Request]` in the title\n  Line 73: - `Add: new feature`\n  Line 74: - `Fix: issue description`\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "skill-arg-injection-25",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/playwright-scraper-skill/INSTALL.md",
+      "evidence": "Injection patterns found:\n  Line 78: **Error message:** `Error: Cannot find module 'playwright'`\n  Line 88: **Error message:** `browserType.launch: Executable doesn't exist`\n  Line 97: **Error message:** `Permission denied`\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "skill-arg-injection-26",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/playwright-scraper-skill/README.md",
+      "evidence": "Injection patterns found:\n  Line 72: - Hide `navigator.webdriver`\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "skill-arg-injection-27",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/playwright-scraper-skill/README_ZH.md",
+      "evidence": "Injection patterns found:\n  Line 70: - 隱藏 `navigator.webdriver`\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "skill-arg-injection-28",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/playwright-scraper-skill/SKILL.md",
+      "evidence": "Injection patterns found:\n  Line 19: | **Dynamic Sites** | Medium | Playwright Simple | `scripts/playwright-simple.js` |\n  Line 20: | **Cloudflare Protected** | High | **Playwright Stealth** ⭐ | `scripts/playwright-stealth.js` |\n  Line 40: Use OpenClaw's built-in `web_fetch` tool:\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "skill-dangerous-runtime-30",
+      "category": "skill",
+      "severity": "MEDIUM",
+      "title": "Dangerous execution primitive in skill file",
+      "warning": "This skill contains code that can execute arbitrary system commands — a compromised or malicious skill could delete files, install malware, or steal credentials.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/playwright-scraper-skill/examples/README.md",
+      "evidence": "Matched patterns:\n  Line 130: const { spawn } = require('child_process');\nThese functions can execute arbitrary system commands.",
+      "remediation": "Validate and sanitize all inputs before passing to execution functions. Consider using a sandbox or allow-list for permitted commands."
+    },
+    {
+      "id": "skill-arg-injection-30",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/playwright-scraper-skill/examples/README.md",
+      "evidence": "Injection patterns found:\n  Line 118: for url in \"${URLS[@]}\"; do\n  Line 120: node scripts/playwright-stealth.js \"$url\" > \"output_$(date +%s).json\"\n  Line 156: reject(new Error(`Exit code: ${code}`));\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "skill-arg-injection-31",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/playwright-scraper-skill/examples/discuss-hk.sh",
+      "evidence": "Injection patterns found:\n  Line 4: SCRIPT_DIR=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n  Line 5: SKILL_DIR=\"$(dirname \"$SCRIPT_DIR\")\"\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "skill-arg-injection-34",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/playwright-scraper-skill/scripts/playwright-simple.js",
+      "evidence": "Injection patterns found:\n  Line 31: console.log(`📱 導航到: ${url}`);\n  Line 34: console.log(`⏳ 等待 ${waitTime}ms...`);\n  Line 50: console.log(`📸 截圖已儲存: ${screenshotPath}`);\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "skill-arg-injection-35",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/playwright-scraper-skill/scripts/playwright-stealth.js",
+      "evidence": "Injection patterns found:\n  Line 25: const screenshotPath = process.env.SCREENSHOT_PATH || `./screenshot-${Date.now()}.png`;\n  Line 40: console.log(`🔒 反爬模式: ${headless ? '無頭' : '有頭'}`);\n  Line 82: console.log(`📱 導航到: ${url}`);\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "skill-arg-injection-38",
+      "category": "skill",
+      "severity": "HIGH",
+      "title": "Command/argument injection pattern detected",
+      "warning": "Shell expansion or command chaining in skill content can allow arbitrary code execution when the AI processes tool arguments.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/summarize/SKILL.md",
+      "evidence": "Injection patterns found:\n  Line 23: - OpenAI: `OPENAI_API_KEY`\n  Line 24: - Anthropic: `ANTHROPIC_API_KEY`\n  Line 25: - xAI: `XAI_API_KEY`\nPatterns like ${...}, `...`, $(...), or pipe-to-shell can inject arbitrary commands.",
+      "remediation": "Remove shell expansion syntax. Use explicit, sanitized parameters instead of dynamic command construction."
+    },
+    {
+      "id": "llm-skill-1",
+      "category": "skill",
+      "severity": "LOW",
+      "title": "apple-notes delete operation - interactive but destructive",
+      "warning": "The memo CLI supports deleting notes (`memo notes -d`) which is a destructive operation, though it requires interactive selection by default.",
+      "source": "~/skills/apple-notes/SKILL.md",
+      "evidence": "- Delete a note: `memo notes -d`\n  - Interactive selection of note to delete.",
+      "remediation": "This is acceptable as delete requires interactive user confirmation. Consider documenting that automation scripts should use caution when piping input to this command."
+    },
+    {
+      "id": "llm-skill-2",
+      "category": "skill",
+      "severity": "LOW",
+      "title": "apple-reminders delete operations - destructive but require IDs",
+      "warning": "The remindctl CLI supports deleting reminders and lists (`remindctl delete`, `remindctl list --delete`) which are destructive, though they require specific IDs.",
+      "source": "~/skills/apple-reminders/SKILL.md",
+      "evidence": "- Delete by id: `remindctl delete 4A83 --force`\n- Delete list: `remindctl list Work --delete`",
+      "remediation": "Acceptable as operations require explicit IDs. The --force flag is noted which is appropriate for automation scenarios."
+    },
+    {
+      "id": "llm-skill-3",
+      "category": "skill",
+      "severity": "LOW",
+      "title": "apple-reminders list delete - destructive account-level operation",
+      "warning": "Deleting a reminder list (`--delete`) permanently removes all reminders within that list - a batch destructive action.",
+      "source": "~/skills/apple-reminders/SKILL.md",
+      "evidence": "- Delete list: `remindctl list Work --delete`",
+      "remediation": "Consider adding a warning about batch deletion implications or requiring confirmation for list deletion."
+    },
+    {
+      "id": "memory-secret-3-1",
+      "category": "memory",
+      "severity": "HIGH",
+      "title": "Plaintext secret found: OpenAI-style API key (sk-...)",
+      "warning": "Credentials stored in plaintext can be extracted by any process with file access — leading to account takeover, unauthorized API usage, and financial loss.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/08d90305-4ce3-427f-b749-1fb412463be9.jsonl",
+      "evidence": "Line 21: sk-m*******************************************BR2N\nPattern: OpenAI-style API key (sk-...)",
+      "remediation": "Remove the secret from this file, rotate the compromised credential, and use environment variables or a secret manager instead."
+    },
+    {
+      "id": "memory-pii-3",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/08d90305-4ce3-427f-b749-1fb412463be9.jsonl",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-secret-4-2",
+      "category": "memory",
+      "severity": "HIGH",
+      "title": "Plaintext secret found: OpenAI-style API key (sk-...)",
+      "warning": "Credentials stored in plaintext can be extracted by any process with file access — leading to account takeover, unauthorized API usage, and financial loss.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/09af4a4f-432d-42f7-a2c3-5a487b05dbc2.jsonl",
+      "evidence": "Line 21: sk-m*******************************************BR2N\nPattern: OpenAI-style API key (sk-...)",
+      "remediation": "Remove the secret from this file, rotate the compromised credential, and use environment variables or a secret manager instead."
+    },
+    {
+      "id": "memory-pii-4",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/09af4a4f-432d-42f7-a2c3-5a487b05dbc2.jsonl",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-pii-5",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/2d3ff5af-21cb-4d22-ae79-2f1cd9c382f9.jsonl",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-secret-9-3",
+      "category": "memory",
+      "severity": "HIGH",
+      "title": "Plaintext secret found: OpenAI-style API key (sk-...)",
+      "warning": "Credentials stored in plaintext can be extracted by any process with file access — leading to account takeover, unauthorized API usage, and financial loss.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/5e0a8a19-ae95-4876-8196-471da691e063.jsonl",
+      "evidence": "Line 21: sk-m*******************************************BR2N\nPattern: OpenAI-style API key (sk-...)",
+      "remediation": "Remove the secret from this file, rotate the compromised credential, and use environment variables or a secret manager instead."
+    },
+    {
+      "id": "memory-pii-9",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/5e0a8a19-ae95-4876-8196-471da691e063.jsonl",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-secret-10-4",
+      "category": "memory",
+      "severity": "HIGH",
+      "title": "Plaintext secret found: OpenAI-style API key (sk-...)",
+      "warning": "Credentials stored in plaintext can be extracted by any process with file access — leading to account takeover, unauthorized API usage, and financial loss.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/66a7834c-8b03-4d97-8d38-51fa8fe4e0aa.jsonl",
+      "evidence": "Line 21: sk-m*******************************************BR2N\nPattern: OpenAI-style API key (sk-...)",
+      "remediation": "Remove the secret from this file, rotate the compromised credential, and use environment variables or a secret manager instead."
+    },
+    {
+      "id": "memory-pii-10",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/66a7834c-8b03-4d97-8d38-51fa8fe4e0aa.jsonl",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-secret-11-5",
+      "category": "memory",
+      "severity": "HIGH",
+      "title": "Plaintext secret found: OpenAI-style API key (sk-...)",
+      "warning": "Credentials stored in plaintext can be extracted by any process with file access — leading to account takeover, unauthorized API usage, and financial loss.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/6b8fb3cd-7bfd-4514-ad88-76d7bc1f2b8d.jsonl",
+      "evidence": "Line 21: sk-m*******************************************BR2N\nPattern: OpenAI-style API key (sk-...)",
+      "remediation": "Remove the secret from this file, rotate the compromised credential, and use environment variables or a secret manager instead."
+    },
+    {
+      "id": "memory-pii-11",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/6b8fb3cd-7bfd-4514-ad88-76d7bc1f2b8d.jsonl",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-pii-12",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/6daa6617-efe6-4d66-aca3-4fe55285fe6d.jsonl",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-secret-13-6",
+      "category": "memory",
+      "severity": "HIGH",
+      "title": "Plaintext secret found: OpenAI-style API key (sk-...)",
+      "warning": "Credentials stored in plaintext can be extracted by any process with file access — leading to account takeover, unauthorized API usage, and financial loss.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/70f43e6b-670d-4ac6-8499-e2e48136fff2.jsonl",
+      "evidence": "Line 21: sk-m*******************************************BR2N\nPattern: OpenAI-style API key (sk-...)",
+      "remediation": "Remove the secret from this file, rotate the compromised credential, and use environment variables or a secret manager instead."
+    },
+    {
+      "id": "memory-pii-13",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/70f43e6b-670d-4ac6-8499-e2e48136fff2.jsonl",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-secret-14-7",
+      "category": "memory",
+      "severity": "HIGH",
+      "title": "Plaintext secret found: OpenAI-style API key (sk-...)",
+      "warning": "Credentials stored in plaintext can be extracted by any process with file access — leading to account takeover, unauthorized API usage, and financial loss.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/7afca18f-6838-4208-b655-754e280667ec.jsonl",
+      "evidence": "Line 21: sk-m*******************************************BR2N\nPattern: OpenAI-style API key (sk-...)",
+      "remediation": "Remove the secret from this file, rotate the compromised credential, and use environment variables or a secret manager instead."
+    },
+    {
+      "id": "memory-pii-14",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/7afca18f-6838-4208-b655-754e280667ec.jsonl",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-pii-17",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/9cd28ec8-f45f-4611-9193-1a3ed5951e15.jsonl",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-secret-19-8",
+      "category": "memory",
+      "severity": "HIGH",
+      "title": "Plaintext secret found: OpenAI-style API key (sk-...)",
+      "warning": "Credentials stored in plaintext can be extracted by any process with file access — leading to account takeover, unauthorized API usage, and financial loss.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/b7c0e90d-30ed-437f-b1f9-9073a5634db3.jsonl",
+      "evidence": "Line 21: sk-m*******************************************BR2N\nPattern: OpenAI-style API key (sk-...)",
+      "remediation": "Remove the secret from this file, rotate the compromised credential, and use environment variables or a secret manager instead."
+    },
+    {
+      "id": "memory-pii-19",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/b7c0e90d-30ed-437f-b1f9-9073a5634db3.jsonl",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-secret-21-9",
+      "category": "memory",
+      "severity": "HIGH",
+      "title": "Plaintext secret found: OpenAI-style API key (sk-...)",
+      "warning": "Credentials stored in plaintext can be extracted by any process with file access — leading to account takeover, unauthorized API usage, and financial loss.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/c6fb7ee8-36b2-4f2d-9f09-2055367c799f.jsonl",
+      "evidence": "Line 21: sk-m*******************************************BR2N\nPattern: OpenAI-style API key (sk-...)",
+      "remediation": "Remove the secret from this file, rotate the compromised credential, and use environment variables or a secret manager instead."
+    },
+    {
+      "id": "memory-pii-21",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/c6fb7ee8-36b2-4f2d-9f09-2055367c799f.jsonl",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-pii-23",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/e1432a54-0b07-4a79-946a-766a76f0d5dc.jsonl",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-pii-24",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/e1765891-5fb7-4df1-a016-d5d59da490b7.jsonl",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-pii-26",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/agents/main/sessions/e26b91f9-a3eb-4a9e-b6d2-9abc7ea82ac8.jsonl",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-pii-36",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/logs/gateway.err.log",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-secret-37-10",
+      "category": "memory",
+      "severity": "HIGH",
+      "title": "Plaintext secret found: OpenAI-style API key (sk-...)",
+      "warning": "Credentials stored in plaintext can be extracted by any process with file access — leading to account takeover, unauthorized API usage, and financial loss.",
+      "source": "/Users/zhangbo/.openclaw/logs/gateway.log",
+      "evidence": "Line 2246: sk-m*******************************************BR2N\nPattern: OpenAI-style API key (sk-...)",
+      "remediation": "Remove the secret from this file, rotate the compromised credential, and use environment variables or a secret manager instead."
+    },
+    {
+      "id": "memory-pii-37",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/logs/gateway.log",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-pii-40",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/workspace/AGENTS.md",
+      "evidence": "Detected PII types: US phone number pattern\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-pii-45",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/workspace/TOOLS.md",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    },
+    {
+      "id": "memory-pii-54",
+      "category": "memory",
+      "severity": "MEDIUM",
+      "title": "Personally identifiable information (PII) in session data",
+      "warning": "Stored PII increases your exposure in a data breach and may violate privacy regulations (GDPR, CCPA). Personal data could also be inadvertently sent to third-party model providers.",
+      "source": "/Users/zhangbo/.openclaw/workspace/skills/duckduckgo-search/SKILL.md",
+      "evidence": "Detected PII types: IP address (potential internal host)\nPII stored in session history may violate data protection regulations and increases breach impact.",
+      "remediation": "Redact or anonymize PII in stored sessions. Consider enabling auto-redaction for future memory writes."
+    }
+  ],
+  "modules": [
+    {
+      "name": "posture",
+      "status": "warn",
+      "score": 21,
+      "findings": 13,
+      "startedAt": "2026-03-06T10:14:52.448Z",
+      "endedAt": "2026-03-06T10:15:18.440Z",
+      "durationMs": 25992
+    },
+    {
+      "name": "skill",
+      "status": "warn",
+      "score": 15,
+      "findings": 23,
+      "startedAt": "2026-03-06T10:15:18.441Z",
+      "endedAt": "2026-03-06T10:15:44.819Z",
+      "durationMs": 26378
+    },
+    {
+      "name": "model",
+      "status": "skipped",
+      "score": 100,
+      "findings": 0,
+      "startedAt": "2026-03-06T10:15:44.823Z",
+      "endedAt": "2026-03-06T10:15:44.823Z",
+      "durationMs": 0,
+      "error": "Skipped (--skip-model or gateway not available)"
+    },
+    {
+      "name": "memory",
+      "status": "warn",
+      "score": 17,
+      "findings": 30,
+      "startedAt": "2026-03-06T10:15:44.824Z",
+      "endedAt": "2026-03-06T10:16:19.465Z",
+      "durationMs": 34641
+    }
+  ]
+}
