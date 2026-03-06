@@ -3,7 +3,13 @@
   <h1>openclaw-deepsafe</h1>
   <p><strong>Preflight Security Scanner for OpenClaw</strong></p>
   <p>One-command scan &mdash; 28+ secret patterns, 15+ skill analyzers, 4 model safety benchmarks, LLM-enhanced semantic analysis. Fully local.</p>
-  <a href="https://github.com/XiaoYiWeio/DeepSafe"><img alt="GitHub" src="https://img.shields.io/badge/Powered_by-DeepSafe-blue?logo=github"></a>
+  <p>
+    <img alt="Version" src="https://img.shields.io/badge/version-0.2.0-blue">
+    <img alt="OpenClaw" src="https://img.shields.io/badge/OpenClaw-%E2%89%A5%202026.3.x-orange?logo=data:image/svg+xml;base64,">
+    <img alt="Node.js" src="https://img.shields.io/badge/Node.js-%E2%89%A5%2018-339933?logo=node.js&logoColor=white">
+    <img alt="Python" src="https://img.shields.io/badge/Python-%E2%89%A5%203.8-3776AB?logo=python&logoColor=white">
+    <a href="https://github.com/AI45Lab/DeepSafe"><img alt="Powered by DeepSafe" src="https://img.shields.io/badge/Powered_by-DeepSafe-8b5cf6?logo=github"></a>
+  </p>
 </div>
 
 ---
@@ -11,6 +17,8 @@
 ## What It Does
 
 **openclaw-deepsafe** is a preflight security scanner that gives you a full risk assessment before you start working with OpenClaw. It's **not** a runtime interceptor — it scans once, caches results, and lets you focus on your work.
+
+All LLM communication is routed through the **OpenClaw Gateway** — the plugin never touches API keys or tokens directly. This means it works seamlessly with any provider OpenClaw supports, including OAuth-authenticated services.
 
 ### Scan Dimensions
 
@@ -104,8 +112,18 @@ Hidden Unicode, prompt injection, dangerous runtimes, base64/hex encoded payload
 
 ## Requirements
 
-- **Python 3** — required for model safety probes (standard library only, no pip install needed)
-- **OpenClaw** — with a configured model in `~/.openclaw/openclaw.json`
+| Dependency | Version | Purpose |
+| :--- | :--- | :--- |
+| **OpenClaw** | >= 2026.3.x | Core platform + Gateway for LLM routing |
+| **Node.js** | >= 18 | Runtime (bundled with OpenClaw) |
+| **Python 3** | >= 3.8 | Model safety probes (stdlib only, no pip needed) |
+
+### Environment
+
+- **OS**: macOS, Linux (Windows via WSL)
+- **Gateway**: OpenClaw Gateway must be running (`openclaw gateway start`)
+- **Model**: At least one model configured in `~/.openclaw/openclaw.json`
+- **Network**: Fully local — no data leaves your machine unless model API calls go through your configured provider
 
 ## Debug
 
@@ -118,8 +136,8 @@ openclaw deepsafe scan --debug --force
 
 ## Powered by
 
-<a href="https://github.com/XiaoYiWeio/DeepSafe">
+<a href="https://github.com/AI45Lab/DeepSafe">
   <img src="assets/deepsafe-logo-dark.svg" alt="DeepSafe" width="160">
 </a>
 
-Part of the [DeepSafe](https://github.com/XiaoYiWeio/DeepSafe) AI Safety Evaluation Framework.
+Part of the [DeepSafe](https://github.com/AI45Lab/DeepSafe) AI Safety Evaluation Framework.

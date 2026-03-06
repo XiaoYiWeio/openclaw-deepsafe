@@ -184,14 +184,15 @@ export function toHtml(report: ScanReport): string {
   const moduleCards = (["posture", "skill", "model", "memory"] as const)
     .map((key, idx) => {
       const mod = report.modules.find((m) => m.name === key);
-      const score = mod && mod.status !== "error" && mod.status !== "skipped" ? mod.score : 0;
+      const contribScore = (report.scores as any)[key] ?? 0;
       const status = mod ? mod.status : "skipped";
-      const color = scoreColor(score);
-      const colorDim = scoreColorDim(score);
+      const pctFull = Math.max(0, Math.min(25, contribScore)) / 25;
+      const fullScore = Math.round(pctFull * 100);
+      const color = scoreColor(fullScore);
+      const colorDim = scoreColorDim(fullScore);
       const radius = 36;
       const circumference = 2 * Math.PI * radius;
-      const pct = Math.max(0, Math.min(100, score)) / 100;
-      const dashLen = circumference * pct;
+      const dashLen = circumference * pctFull;
       const gapLen = circumference - dashLen;
       const modFindings = mod ? mod.findings : 0;
       const duration = mod ? durationStr(mod.durationMs) : "-";
@@ -214,8 +215,8 @@ export function toHtml(report: ScanReport): string {
                 stroke-dasharray="${dashLen} ${gapLen}"
                 stroke-linecap="round" transform="rotate(-90 45 45)"
                 style="--target-dash: ${dashLen} ${gapLen}; --circumference: ${circumference}; animation-delay:${0.3 + idx * 0.15}s"/>
-              <text x="45" y="42" text-anchor="middle" fill="${color}" font-size="20" font-weight="800" font-family="-apple-system,BlinkMacSystemFont,sans-serif">${score}</text>
-              <text x="45" y="56" text-anchor="middle" fill="rgba(255,255,255,0.35)" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">/100</text>
+              <text x="45" y="42" text-anchor="middle" fill="${color}" font-size="20" font-weight="800" font-family="-apple-system,BlinkMacSystemFont,sans-serif">${contribScore}</text>
+              <text x="45" y="56" text-anchor="middle" fill="rgba(255,255,255,0.35)" font-size="9" font-family="-apple-system,BlinkMacSystemFont,sans-serif">/25</text>
             </svg>
           </div>
           <div class="module-card-meta">
@@ -269,7 +270,7 @@ export function toHtml(report: ScanReport): string {
     const modSeverity = maxSeverity(modFindings);
     const modSevColor = modSeverity ? SEVERITY_COLORS[modSeverity] : "#64748b";
 
-    findingsHtml += `<div class="findings-module-group fade-in">
+    findingsHtml += `<div id="findings-${modName}" class="findings-module-group fade-in">
       <div class="findings-module-header">
         <div class="findings-module-title-row">
           <span class="module-icon-sm" style="color:${modSevColor}">${MODULE_ICONS[modName] ?? ""}</span>
@@ -314,6 +315,17 @@ export function toHtml(report: ScanReport): string {
     findingsHtml += `</div>`;
   }
 
+  const presentCategories = (["posture", "skill", "model", "memory"] as const)
+    .filter(k => findingsByModule[k]?.length);
+  const findingsSubNav = presentCategories.length > 1
+    ? `<div class="findings-subnav">${presentCategories.map(k =>
+        `<a href="#findings-${k}" class="findings-subnav-item" data-target="findings-${k}">` +
+        `<span class="findings-subnav-icon">${MODULE_ICONS[k] ?? ""}</span>` +
+        `${escHtml(MODULE_LABELS[k] ?? k)}` +
+        `<span class="findings-subnav-count">${findingsByModule[k]!.length}</span></a>`
+      ).join("")}</div>`
+    : "";
+
   if (!findingsHtml) {
     findingsHtml = `<div class="no-findings fade-in">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -352,6 +364,9 @@ ${faviconSrc ? `<link rel="icon" type="image/png" href="${faviconSrc}">` : ""}
 
 body {
   background: var(--bg-primary);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 70% 20%, rgba(59,130,246,0.04), transparent),
+    radial-gradient(ellipse 60% 50% at 30% 70%, rgba(139,92,246,0.03), transparent);
   color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   min-height: 100vh;
@@ -403,6 +418,46 @@ body {
   background: rgba(96,165,250,0.1);
   font-weight: 600;
 }
+.sidebar-sublink {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px 5px 24px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  text-decoration: none;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.sidebar-sublink:hover {
+  color: rgba(255,255,255,0.75);
+  background: rgba(255,255,255,0.04);
+}
+.sidebar-sublink.active {
+  color: #818cf8;
+  background: rgba(129,140,248,0.08);
+  font-weight: 600;
+}
+.sidebar-sublink-icon {
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.sidebar-sublink-count {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.35);
+  padding: 1px 5px;
+  border-radius: 8px;
+  min-width: 16px;
+  text-align: center;
+}
+.sidebar-sublink.active .sidebar-sublink-count {
+  background: rgba(129,140,248,0.15);
+  color: #818cf8;
+}
 .sidebar-divider {
   height: 1px;
   background: rgba(255,255,255,0.06);
@@ -424,6 +479,11 @@ body {
   margin-left: auto;
   color: rgba(255,255,255,0.8);
 }
+.sidebar-score small {
+  color: rgba(255,255,255,0.25);
+  font-size: 10px;
+  margin-left: 1px;
+}
 .sidebar-dot {
   width: 8px;
   height: 8px;
@@ -436,32 +496,70 @@ body {
 }
 
 .container {
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
+  padding: 0 32px 80px;
   margin-left: 220px;
-  padding: 0 24px 80px;
+  margin-right: auto;
+}
+@media (min-width: 1400px) {
+  .container {
+    margin-left: calc(220px + (100vw - 220px - 960px) / 2);
+  }
 }
 
 /* ── Summary Section ── */
 .summary-section { margin-bottom: 40px; }
 .summary-box {
-  background: rgba(96,165,250,0.06);
-  border: 1px solid rgba(96,165,250,0.15);
+  background: rgba(96,165,250,0.05);
+  border: 1px solid rgba(96,165,250,0.12);
   border-radius: 14px;
-  padding: 24px;
+  padding: 28px;
 }
-.summary-icon {
+.summary-overview {
+  color: rgba(255,255,255,0.88);
+  font-size: 15px;
+  line-height: 1.7;
+  margin: 0 0 20px;
+}
+.summary-sub-title {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  font-weight: 600;
-  color: #60a5fa;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 12px;
+  letter-spacing: 1.2px;
+  margin-bottom: 10px;
 }
-.summary-text {
+.summary-sub-title.issues { color: #f87171; }
+.summary-sub-title.recs { color: #34d399; }
+.summary-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px;
+}
+.summary-list li {
+  position: relative;
+  padding: 7px 0 7px 20px;
+  color: rgba(255,255,255,0.75);
+  font-size: 13.5px;
+  line-height: 1.6;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.summary-list li:last-child { border-bottom: none; }
+.summary-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 14px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.summary-list.issues li::before { background: #f87171; }
+.summary-list.recs li::before { background: #34d399; }
+.summary-text-fallback {
   color: rgba(255,255,255,0.8);
   font-size: 14px;
   line-height: 1.8;
@@ -856,6 +954,50 @@ body {
   margin-bottom: 40px;
 }
 
+.findings-subnav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding: 6px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.findings-subnav-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.55);
+  text-decoration: none;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.findings-subnav-item:hover {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.85);
+}
+.findings-subnav-item.active {
+  background: rgba(59,130,246,0.12);
+  color: #60a5fa;
+}
+.findings-subnav-icon {
+  font-size: 15px;
+}
+.findings-subnav-count {
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255,255,255,0.08);
+  padding: 1px 7px;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+}
+
 .findings-module-group {
   margin-bottom: 28px;
 }
@@ -1198,16 +1340,22 @@ details[open] > .finding-summary::before {
 <nav class="sidebar" id="sidebar">
   <div class="sidebar-title">Navigation</div>
   <a href="#sec-overview" class="sidebar-link active">Overview</a>
-  ${report.summary ? '<a href="#sec-summary" class="sidebar-link">Summary</a>' : ""}
+  ${(report.structuredSummary || report.summary) ? '<a href="#sec-summary" class="sidebar-link">Assessment</a>' : ""}
   <a href="#sec-modules" class="sidebar-link">Module Scores</a>
   <a href="#sec-severity" class="sidebar-link">Severity</a>
   <a href="#sec-findings" class="sidebar-link">Findings</a>
+  ${presentCategories.map(k =>
+    `<a href="#findings-${k}" class="sidebar-sublink" data-target="findings-${k}">` +
+    `<span class="sidebar-sublink-icon">${MODULE_ICONS[k] ?? ""}</span>` +
+    `${escHtml(MODULE_LABELS[k] ?? k)}` +
+    `<span class="sidebar-sublink-count">${findingsByModule[k]!.length}</span></a>`
+  ).join("\n  ")}
   <div class="sidebar-divider"></div>
   <div class="sidebar-scores">
-    <div class="sidebar-score"><span class="sidebar-dot" style="background:${scoreColor(s.posture)}"></span>Posture <b>${s.posture}</b></div>
-    <div class="sidebar-score"><span class="sidebar-dot" style="background:${scoreColor(s.skill)}"></span>Skill <b>${s.skill}</b></div>
-    <div class="sidebar-score"><span class="sidebar-dot" style="background:${scoreColor(s.model)}"></span>Model <b>${s.model}</b></div>
-    <div class="sidebar-score"><span class="sidebar-dot" style="background:${scoreColor(s.memory)}"></span>Memory <b>${s.memory}</b></div>
+    <div class="sidebar-score"><span class="sidebar-dot" style="background:${scoreColor(s.posture * 4)}"></span>Posture <b>${s.posture}</b><small>/25</small></div>
+    <div class="sidebar-score"><span class="sidebar-dot" style="background:${scoreColor(s.skill * 4)}"></span>Skill <b>${s.skill}</b><small>/25</small></div>
+    <div class="sidebar-score"><span class="sidebar-dot" style="background:${scoreColor(s.model * 4)}"></span>Model <b>${s.model}</b><small>/25</small></div>
+    <div class="sidebar-score"><span class="sidebar-dot" style="background:${scoreColor(s.memory * 4)}"></span>Memory <b>${s.memory}</b><small>/25</small></div>
   </div>
 </nav>
 <div class="container">
@@ -1254,17 +1402,29 @@ details[open] > .finding-summary::before {
   </div>
 
   <!-- Executive Summary -->
-  ${report.summary ? `<div id="sec-summary" class="summary-section fade-in" style="animation-delay:0.15s">
+  ${(report.structuredSummary || report.summary) ? `<div id="sec-summary" class="summary-section fade-in" style="animation-delay:0.15s">
     <div class="section-header">
-      <h2>Executive Summary</h2>
+      <h2>Security Assessment</h2>
       <div class="section-line"></div>
     </div>
     <div class="summary-box">
-      <div class="summary-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <span>AI-Generated Analysis</span>
-      </div>
-      <p class="summary-text">${escHtml(report.summary)}</p>
+      ${report.structuredSummary ? `
+        <p class="summary-overview">${escHtml(report.structuredSummary.overview)}</p>
+        ${report.structuredSummary.critical_issues.length > 0 ? `
+          <div class="summary-sub-title issues">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Critical Issues
+          </div>
+          <ul class="summary-list issues">${report.structuredSummary.critical_issues.map((i: string) => `<li>${escHtml(i)}</li>`).join("")}</ul>
+        ` : ""}
+        ${report.structuredSummary.recommendations.length > 0 ? `
+          <div class="summary-sub-title recs">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Recommended Actions
+          </div>
+          <ul class="summary-list recs">${report.structuredSummary.recommendations.map((r: string) => `<li>${escHtml(r)}</li>`).join("")}</ul>
+        ` : ""}
+      ` : `<p class="summary-text-fallback">${escHtml(report.summary ?? "")}</p>`}
     </div>
   </div>` : ""}
 
@@ -1294,6 +1454,7 @@ details[open] > .finding-summary::before {
       <h2>Detailed Findings</h2>
       <div class="section-line"></div>
     </div>
+    ${findingsSubNav}
     ${findingsHtml}
   </div>
 
@@ -1330,6 +1491,7 @@ details[open] > .finding-summary::before {
     sections.forEach(function(s){ if(s.el && s.el.offsetTop <= scrollY) active = s; });
     links.forEach(function(l){ l.classList.remove('active'); });
     if(active && active.link) active.link.classList.add('active');
+    updateSubNav();
   }
   window.addEventListener('scroll', update, {passive:true});
   update();
@@ -1338,6 +1500,45 @@ details[open] > .finding-summary::before {
     var t = document.querySelector(this.getAttribute('href'));
     if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
   }); });
+
+  var subNavItems = document.querySelectorAll('.findings-subnav-item');
+  var sidebarSublinks = document.querySelectorAll('.sidebar-sublink');
+  var findingGroups = [];
+  subNavItems.forEach(function(item){
+    var targetId = item.getAttribute('data-target');
+    if(targetId) findingGroups.push({el:document.getElementById(targetId),link:item});
+  });
+  var sidebarFindingGroups = [];
+  sidebarSublinks.forEach(function(item){
+    var targetId = item.getAttribute('data-target');
+    if(targetId) sidebarFindingGroups.push({el:document.getElementById(targetId),link:item});
+  });
+  function updateSubNav(){
+    if(!findingGroups.length) return;
+    var scrollY = window.scrollY + 120;
+    var active = null;
+    findingGroups.forEach(function(g){ if(g.el && g.el.offsetTop <= scrollY) active = g; });
+    subNavItems.forEach(function(i){ i.classList.remove('active'); });
+    if(active && active.link) active.link.classList.add('active');
+    var activeTarget = active ? active.link.getAttribute('data-target') : null;
+    sidebarSublinks.forEach(function(sl){
+      sl.classList.toggle('active', sl.getAttribute('data-target') === activeTarget);
+    });
+  }
+  subNavItems.forEach(function(item){
+    item.addEventListener('click', function(e){
+      e.preventDefault();
+      var t = document.getElementById(this.getAttribute('data-target'));
+      if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  });
+  sidebarSublinks.forEach(function(item){
+    item.addEventListener('click', function(e){
+      e.preventDefault();
+      var t = document.getElementById(this.getAttribute('data-target'));
+      if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  });
 })();
 </script>
 </body>

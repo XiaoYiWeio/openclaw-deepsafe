@@ -1,8 +1,8 @@
 {
   "id": "openclaw-plugin-deepsafe",
   "name": "DeepSafe OpenClaw Plugin",
-  "version": "0.1.0",
-  "description": "DeepSafe lightweight local checks for OpenClaw",
+  "version": "0.2.0",
+  "description": "Preflight security scanner — 28+ secret patterns, 15+ skill analyzers, 4 model safety probes, LLM-enhanced semantic analysis",
   "configSchema": {
     "type": "object",
     "additionalProperties": false,

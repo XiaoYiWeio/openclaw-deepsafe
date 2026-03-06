@@ -409,14 +409,8 @@ export function runMemoryScan(
       ? "No session/memory files found to scan."
       : `Scanned ${scanned} files across ${scanDirs.filter((d: string) => fs.existsSync(d)).length} directories.`;
 
-  let score = 95;
-  for (const f of findings) {
-    if (f.severity === "CRITICAL") score -= 40;
-    else if (f.severity === "HIGH") score -= 22;
-    else if (f.severity === "MEDIUM") score -= 12;
-    else score -= 4;
-  }
-  score = Math.max(0, Math.min(100, Math.round(score)));
+  const { computeModuleScore } = require("../../report/schema");
+  const score = computeModuleScore(findings);
 
   return {
     name: "memory",

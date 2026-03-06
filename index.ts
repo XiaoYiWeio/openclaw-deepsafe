@@ -303,7 +303,7 @@ export default function register(api: CliApi) {
           console.log(`  ${riskIcon} Overall Score: ${s.total}/100 (${riskLabel})`);
           console.log(`  📊 Findings: ${totalFindings} (🔴${critCount} 🟠${highCount} 🟡${medCount} 🟢${lowCount})`);
           console.log("");
-          console.log(`  🔒 Posture: ${s.posture}  🧩 Skill: ${s.skill}  🧠 Model: ${s.model}  💾 Memory: ${s.memory}`);
+          console.log(`  🔒 Posture: ${s.posture}/25  🧩 Skill: ${s.skill}/25  🧠 Model: ${s.model}/25  💾 Memory: ${s.memory}/25`);
           console.log("");
           console.log(`  ⏱️  ${durationSec}s | ${result.cacheHit ? "📦 cached" : "🔄 fresh scan"} | profile: ${result.report.metadata.profile}`);
           console.log("");

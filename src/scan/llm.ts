@@ -15,7 +15,7 @@ export type LlmConfig = {
 type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
 
 const VALID_SEVERITIES = new Set<string>(["LOW", "MEDIUM", "HIGH", "CRITICAL"]);
-const LLM_TIMEOUT_MS = 45_000;
+const LLM_TIMEOUT_MS = 90_000;
 
 export function chatCompletion(
   config: LlmConfig,

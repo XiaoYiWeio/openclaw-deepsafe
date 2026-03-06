@@ -456,7 +456,7 @@ export function runSkillScan(
     try {
       const skillContents: string[] = [];
       let totalChars = 0;
-      const MAX_CONTEXT_CHARS = 8000;
+      const MAX_CONTEXT_CHARS = 4000;
 
       for (const filePath of files) {
         if (totalChars >= MAX_CONTEXT_CHARS) break;
@@ -521,14 +521,8 @@ export function runSkillScan(
     }
   }
 
-  let score = 96;
-  for (const f of findings) {
-    if (f.severity === "CRITICAL") score -= 35;
-    else if (f.severity === "HIGH") score -= 20;
-    else if (f.severity === "MEDIUM") score -= 12;
-    else score -= 4;
-  }
-  score = Math.max(0, Math.min(100, Math.round(score)));
+  const { computeModuleScore } = require("../../report/schema");
+  const score = computeModuleScore(findings);
 
   return {
     name: "skill",

@@ -44,10 +44,17 @@ export type ScanMetadata = {
   ttlDays: number;
 };
 
+export type ScanSummary = {
+  overview: string;
+  critical_issues: string[];
+  recommendations: string[];
+};
+
 export type ScanReport = {
   metadata: ScanMetadata;
   scores: ScanScores;
   summary?: string;
+  structuredSummary?: ScanSummary;
   findings: Finding[];
   modules: ModuleSummary[];
 };
@@ -81,4 +88,39 @@ export function clampScore(score: number): number {
   if (score < 0) return 0;
   if (score > 100) return 100;
   return Math.round(score);
+}
+
+const SEVERITY_WEIGHT: Record<Severity, number> = {
+  CRITICAL: 10,
+  HIGH: 3,
+  MEDIUM: 1,
+  LOW: 0.3,
+};
+
+const SCORE_SCALE = 10;
+
+/**
+ * Hyperbolic scoring: score = 100 / (1 + totalWeight / scale)
+ *
+ * Diminishing returns — each additional finding has less marginal impact.
+ * This prevents scores from collapsing to 0 when there are many findings,
+ * while still clearly differentiating severity levels.
+ *
+ * Examples (approximate):
+ *   0 findings          → 100
+ *   1 LOW               →  97
+ *   3 MEDIUM            →  77
+ *   1 HIGH              →  77
+ *   1 CRITICAL          →  50
+ *   1 CRITICAL + 3 HIGH →  34
+ *   2 CRITICAL + 5 HIGH →  24
+ */
+export function computeModuleScore(findings: Finding[]): number {
+  if (findings.length === 0) return 100;
+  let totalWeight = 0;
+  for (const f of findings) {
+    totalWeight += SEVERITY_WEIGHT[f.severity] ?? 0;
+  }
+  const raw = 100 / (1 + totalWeight / SCORE_SCALE);
+  return clampScore(raw);
 }

@@ -82,6 +82,7 @@ function toMarkdown(report: ScanReport): string {
   lines.push(`| Metric | Value |`);
   lines.push(`|--------|-------|`);
   lines.push(`| **Overall Score** | ${scoreBar(report.scores.total)} **${report.scores.total}/100** ${riskEmoji(report.scores.total)} ${riskLabel(report.scores.total)} |`);
+  lines.push(`| **Score Breakdown** | Posture ${report.scores.posture} + Skill ${report.scores.skill} + Model ${report.scores.model} + Memory ${report.scores.memory} = **${report.scores.total}** |`);
   lines.push(`| **Highest Severity** | ${SEVERITY_ICON[highest] ?? "—"} **${highest}** |`);
   lines.push(`| **Total Findings** | **${report.findings.length}** issue(s) |`);
   const critCount = report.findings.filter((f) => f.severity === "CRITICAL").length;
@@ -97,8 +98,27 @@ function toMarkdown(report: ScanReport): string {
     lines.push("");
   }
 
-  if (report.summary) {
-    lines.push("### 🤖 AI Analysis");
+  if (report.structuredSummary) {
+    lines.push("### Security Assessment");
+    lines.push("");
+    lines.push(`> ${report.structuredSummary.overview}`);
+    lines.push("");
+    if (report.structuredSummary.critical_issues.length > 0) {
+      lines.push("**Critical Issues:**");
+      for (const issue of report.structuredSummary.critical_issues) {
+        lines.push(`- ${issue}`);
+      }
+      lines.push("");
+    }
+    if (report.structuredSummary.recommendations.length > 0) {
+      lines.push("**Recommended Actions:**");
+      for (const rec of report.structuredSummary.recommendations) {
+        lines.push(`- ${rec}`);
+      }
+      lines.push("");
+    }
+  } else if (report.summary) {
+    lines.push("### Security Assessment");
     lines.push("");
     lines.push(`> ${report.summary.replace(/\n/g, "\n> ")}`);
     lines.push("");
@@ -112,14 +132,15 @@ function toMarkdown(report: ScanReport): string {
   for (const m of report.modules) {
     const icon = MODULE_ICONS[m.name] ?? "📦";
     const label = MODULE_LABELS[m.name] ?? m.name;
+    const contrib = (report.scores as any)[m.name] ?? 0;
     if (m.status === "error") {
       lines.push(`| ${icon} ${label} | ❌ ERROR | — | — | — |`);
     } else if (m.status === "skipped") {
-      lines.push(`| ${icon} ${label} | ⏭️ SKIP | — | — | — |`);
+      lines.push(`| ${icon} ${label} | **${contrib}**/25 | ⏭️ SKIP | — | — |`);
     } else {
       const risk = riskLabel(m.score);
       const emoji = riskEmoji(m.score);
-      lines.push(`| ${icon} ${label} | **${m.score}**/100 | ${emoji} ${risk} | ${m.findings} | ${durationLabel(m.durationMs)} |`);
+      lines.push(`| ${icon} ${label} | **${contrib}**/25 | ${emoji} ${risk} | ${m.findings} | ${durationLabel(m.durationMs)} |`);
     }
   }
   lines.push("");

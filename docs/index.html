@@ -684,6 +684,109 @@ section { padding: 100px 0; }
 
 .feature p { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
 
+/* ── Requirements ── */
+.req-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 32px;
+}
+@media (max-width: 768px) {
+  .req-grid { grid-template-columns: 1fr; }
+}
+.req-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 24px;
+  transition: all 0.3s;
+}
+.req-card:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+}
+.req-icon {
+  font-size: 28px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+}
+.req-info {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.req-info h4 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+.req-version {
+  font-size: 13px;
+  font-weight: 600;
+  color: #60a5fa;
+  background: rgba(96,165,250,0.12);
+  padding: 2px 10px;
+  border-radius: 20px;
+}
+.req-desc {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.req-env {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+.req-env-title {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 16px;
+}
+.req-env-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.req-env-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.req-env-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.06);
+  padding: 3px 10px;
+  border-radius: 6px;
+  min-width: 72px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.req-env-item code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  background: rgba(255,255,255,0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #a78bfa;
+}
+
 /* ── Footer ── */
 footer {
   padding: 64px 0 40px;
@@ -1095,6 +1198,53 @@ footer {
         </span>
         <h3>Config Auto-Detection</h3>
         <p>Automatically discovers your OpenClaw configuration&mdash;gateway, skills, models, and memory stores.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Requirements ── -->
+<section id="requirements">
+  <div class="container">
+    <div class="section-header" style="text-align:center">
+      <div class="section-label">Requirements</div>
+      <h2 class="section-title">What you need to get started.</h2>
+      <p class="section-desc">Minimal dependencies. No pip installs, no Docker, no cloud accounts.</p>
+    </div>
+    <div class="req-grid">
+      <div class="req-card reveal">
+        <div class="req-icon">🦞</div>
+        <div class="req-info">
+          <h4>OpenClaw</h4>
+          <span class="req-version">&ge; 2026.3.x</span>
+        </div>
+        <p class="req-desc">Core platform with Gateway for LLM routing. All model communication goes through the Gateway — no API keys needed in the plugin.</p>
+      </div>
+      <div class="req-card reveal reveal-delay-1">
+        <div class="req-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#339933" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+        <div class="req-info">
+          <h4>Node.js</h4>
+          <span class="req-version">&ge; 18</span>
+        </div>
+        <p class="req-desc">JavaScript runtime — typically bundled with OpenClaw. No additional installation needed if OpenClaw is already working.</p>
+      </div>
+      <div class="req-card reveal reveal-delay-2">
+        <div class="req-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3776AB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+        <div class="req-info">
+          <h4>Python 3</h4>
+          <span class="req-version">&ge; 3.8</span>
+        </div>
+        <p class="req-desc">Required for model safety probes (persuasion, sandbagging, deception, hallucination). Uses standard library only — no pip install needed.</p>
+      </div>
+    </div>
+    <div class="req-env reveal reveal-delay-3">
+      <div class="req-env-title">Environment Notes</div>
+      <div class="req-env-items">
+        <div class="req-env-item"><span class="req-env-label">OS</span><span>macOS &middot; Linux &middot; Windows (via WSL)</span></div>
+        <div class="req-env-item"><span class="req-env-label">Gateway</span><span>Must be running &mdash; <code>openclaw gateway start</code></span></div>
+        <div class="req-env-item"><span class="req-env-label">Model</span><span>At least one model configured in <code>~/.openclaw/openclaw.json</code></span></div>
+        <div class="req-env-item"><span class="req-env-label">Network</span><span>Fully local &mdash; no data leaves your machine</span></div>
+        <div class="req-env-item"><span class="req-env-label">Version</span><span>openclaw-deepsafe <strong>v0.2.0</strong></span></div>
       </div>
     </div>
   </div>

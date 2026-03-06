@@ -343,14 +343,8 @@ export function runPostureScan(
   }
 
   // ── Score ──────────────────────────────────────────────────────────────
-  let score = 95;
-  for (const f of findings) {
-    if (f.severity === "CRITICAL") score -= 45;
-    else if (f.severity === "HIGH") score -= 25;
-    else if (f.severity === "MEDIUM") score -= 15;
-    else score -= 5;
-  }
-  score = Math.max(0, Math.min(100, Math.round(score)));
+  const { computeModuleScore } = require("../../report/schema");
+  const score = computeModuleScore(findings);
 
   return {
     name: "posture",

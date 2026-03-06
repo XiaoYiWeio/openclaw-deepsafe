@@ -6,7 +6,7 @@ const path = require("path");
 const os = require("os");
 
 import { computeFingerprint, saveLatest, tryLoadValidCachedReport } from "../cache/cache";
-import { clampScore, ScanReport } from "../report/schema";
+import { clampScore, ScanReport, ScanSummary } from "../report/schema";
 import { writeReport, ReportPaths } from "../report/writer";
 import { LlmConfig } from "./llm";
 import { runMemoryScan } from "./modules/memory";
@@ -258,6 +258,7 @@ export function runScan(options: ScanOptions): ScanRunResult {
 
   // ── LLM-generated executive summary ──────────────────────────────────
   let summary: string | undefined;
+  let structuredSummary: ScanSummary | undefined;
   if (llmConfig && findings.length > 0) {
     try {
       log("[summary] generating executive summary via LLM...");
@@ -270,10 +271,18 @@ export function runScan(options: ScanOptions): ScanRunResult {
         {
           role: "system",
           content:
-            "You are a security expert writing a brief executive summary of an AI agent security scan. " +
-            "Write 3-5 sentences in plain English for a non-technical audience. Focus on: " +
-            "(1) The most critical risks found, (2) What the user should fix first, (3) Overall security posture. " +
-            "Be specific — mention actual finding titles. Do NOT use markdown formatting. Keep it under 200 words.",
+            "You are a security expert analyzing an AI agent security scan. " +
+            "Respond ONLY with a JSON object (no markdown, no code fences, no extra text). " +
+            "The JSON must have exactly this shape:\n" +
+            '{"overview":"1-2 sentence overall assessment",' +
+            '"critical_issues":["issue 1","issue 2",...],' +
+            '"recommendations":["action 1","action 2",...]}\n\n' +
+            "Rules:\n" +
+            "- overview: concise plain-English assessment of the security posture\n" +
+            "- critical_issues: list the top 3-5 most dangerous findings (be specific, mention file/config names)\n" +
+            "- recommendations: list 3-5 actionable steps the user should take immediately, ordered by priority\n" +
+            "- Keep each string short (under 30 words)\n" +
+            "- Do NOT use any markdown formatting inside the strings",
         },
         {
           role: "user",
@@ -282,17 +291,38 @@ export function runScan(options: ScanOptions): ScanRunResult {
             `Total findings: ${findings.length}\n\nTop findings:\n${findingBrief}`,
         },
       ], 1024);
-      summary = summaryResponse.trim();
-      if (summary) log(`[summary] done (${summary.length} chars)`);
+      const trimmed = summaryResponse.trim();
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (parsed.overview && Array.isArray(parsed.critical_issues) && Array.isArray(parsed.recommendations)) {
+          structuredSummary = {
+            overview: String(parsed.overview),
+            critical_issues: parsed.critical_issues.map(String),
+            recommendations: parsed.recommendations.map(String),
+          };
+          summary = parsed.overview;
+          log(`[summary] done (structured, ${structuredSummary.critical_issues.length} issues, ${structuredSummary.recommendations.length} recs)`);
+        } else {
+          summary = trimmed;
+          log(`[summary] done (plain text fallback, ${summary.length} chars)`);
+        }
+      } catch {
+        summary = trimmed;
+        log(`[summary] done (plain text fallback, ${summary.length} chars)`);
+      }
     } catch (err: any) {
       log(`[summary] LLM summary failed: ${err?.message ?? err}`);
     }
   }
 
   const endedMs = Date.now();
-  const total = clampScore(
-    (scoreMap.posture + scoreMap.skill + scoreMap.model + scoreMap.memory) / 4,
-  );
+  const contrib = {
+    posture: clampScore(Math.round(scoreMap.posture / 4)),
+    skill: clampScore(Math.round(scoreMap.skill / 4)),
+    model: clampScore(Math.round(scoreMap.model / 4)),
+    memory: clampScore(Math.round(scoreMap.memory / 4)),
+  };
+  const total = clampScore(contrib.posture + contrib.skill + contrib.model + contrib.memory);
 
   const report: ScanReport = {
     metadata: {
@@ -306,12 +336,13 @@ export function runScan(options: ScanOptions): ScanRunResult {
     },
     scores: {
       total,
-      posture: scoreMap.posture,
-      skill: scoreMap.skill,
-      model: scoreMap.model,
-      memory: scoreMap.memory,
+      posture: contrib.posture,
+      skill: contrib.skill,
+      model: contrib.model,
+      memory: contrib.memory,
     },
     summary,
+    structuredSummary,
     findings,
     modules: moduleRuns,
   };
