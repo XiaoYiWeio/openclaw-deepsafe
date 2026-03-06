@@ -18,7 +18,7 @@
 
 **openclaw-deepsafe** is a preflight security scanner that gives you a full risk assessment before you start working with OpenClaw. It's **not** a runtime interceptor — it scans once, caches results, and lets you focus on your work.
 
-All LLM communication is routed through the **OpenClaw Gateway** — the plugin never touches API keys or tokens directly. This means it works seamlessly with any provider OpenClaw supports, including OAuth-authenticated services.
+When the OpenClaw Gateway is running, the plugin routes LLM communication through it for enhanced semantic analysis — no API keys needed. Without the Gateway, the scan still works using rule-based detection.
 
 ### Scan Dimensions
 
@@ -114,15 +114,15 @@ Hidden Unicode, prompt injection, dangerous runtimes, base64/hex encoded payload
 
 | Dependency | Version | Purpose |
 | :--- | :--- | :--- |
-| **OpenClaw** | >= 2026.3.x | Core platform + Gateway for LLM routing |
+| **OpenClaw** | >= 2026.3.x | Core platform (Gateway optional, enables LLM analysis) |
 | **Node.js** | >= 18 | Runtime (bundled with OpenClaw) |
 | **Python 3** | >= 3.8 | Model safety probes (stdlib only, no pip needed) |
 
 ### Environment
 
 - **OS**: macOS, Linux (Windows via WSL)
-- **Gateway**: OpenClaw Gateway must be running (`openclaw gateway start`)
-- **Model**: At least one model configured in `~/.openclaw/openclaw.json`
+- **Gateway**: Optional — enables LLM-enhanced analysis when running (`openclaw gateway start`)
+- **Model**: Optional — enhances detection depth when configured in `~/.openclaw/openclaw.json`
 - **Network**: Fully local — no data leaves your machine unless model API calls go through your configured provider
 
 ## Debug
