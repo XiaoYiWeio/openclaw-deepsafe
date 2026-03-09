@@ -5,7 +5,7 @@
   <p>One-command scan &mdash; 28+ secret patterns, 15+ skill analyzers, 4 model safety benchmarks, LLM-enhanced semantic analysis. Fully local.</p>
   <p>
     <img alt="Version" src="https://img.shields.io/badge/version-0.2.0-blue">
-    <img alt="OpenClaw" src="https://img.shields.io/badge/OpenClaw-%E2%89%A5%202026.3.x-orange?logo=data:image/svg+xml;base64,">
+    <img alt="OpenClaw" src="https://img.shields.io/badge/OpenClaw-%E2%89%A5%202026.3.x-orange">
     <img alt="Node.js" src="https://img.shields.io/badge/Node.js-%E2%89%A5%2018-339933?logo=node.js&logoColor=white">
     <img alt="Python" src="https://img.shields.io/badge/Python-%E2%89%A5%203.8-3776AB?logo=python&logoColor=white">
     <a href="https://github.com/AI45Lab/DeepSafe"><img alt="Powered by DeepSafe" src="https://img.shields.io/badge/Powered_by-DeepSafe-8b5cf6?logo=github"></a>
