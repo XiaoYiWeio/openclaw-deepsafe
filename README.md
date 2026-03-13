@@ -14,6 +14,19 @@
 
 ---
 
+> **🆕 New: [deepsafe-scan](https://github.com/XiaoYiWeio/deepsafe-scan) — Zero-config Skill version now available!**
+>
+> No Node.js, no npm install, no environment setup. Pure Python, zero dependencies.
+> Same 4 scan modules + 4 model probes + LLM semantic audit. Auto-reads your `openclaw.json` config.
+>
+> ```bash
+> clawhub install deepsafe-scan
+> ```
+>
+> The plugin version (`openclaw-deepsafe`) continues to work and will be maintained. The skill version is recommended for new users.
+
+---
+
 ## What It Does
 
 **openclaw-deepsafe** is a preflight security scanner that gives you a full risk assessment before you start working with OpenClaw. It's **not** a runtime interceptor — it scans once, caches results, and lets you focus on your work.
